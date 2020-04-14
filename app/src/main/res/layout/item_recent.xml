@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+
+ Copyright  David Odari
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except 
+ in compliance with the License. You may obtain a copy of the License at
+            http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software distributed under the License 
+ is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ or implied. See the License for the specific language governing permissions and limitations under
+ the License.
+
+-->
+
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="120dp"
+    android:layout_height="120dp"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="@dimen/card_elevation"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <!--TODO Improve Content Descriptions-->
+        <ImageView
+            android:id="@+id/recent_art_image_view"
+            android:layout_width="@dimen/recent_art_width"
+            android:layout_height="@dimen/recent_art_height"
+            android:background="@color/colorAccent"
+            android:contentDescription="Music Art"
+            android:src="@drawable/ic_music_note_black_24dp" />
+
+        <TextView
+            android:id="@+id/title_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/tiny_margin"
+            android:layout_marginTop="@dimen/tiny_margin"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/grey800"
+            android:textStyle="bold"
+            tools:text="2 4 Rings" />
+
+        <TextView
+            android:id="@+id/artist_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/tiny_margin"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="12sp"
+            tools:text="Kaya Man" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

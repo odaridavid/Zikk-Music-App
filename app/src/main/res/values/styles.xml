@@ -1,0 +1,9 @@
+<resources>
+
+    <style name="Widget.Zikki.TextView.Title" parent="Widget.AppCompat.TextView">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/grey800</item>
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline4
+        </item>
+    </style>
+</resources>
