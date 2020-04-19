@@ -1,9 +1,6 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.db
 
-import android.app.Application
-import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
+import dagger.Module
 
 /**
  *
@@ -18,17 +15,5 @@ import timber.log.Timber
  * the License.
  *
  **/
-internal class ZikkApp : Application() {
-
-    lateinit var appComponent: AppComponent
-
-    override fun onCreate() {
-        super.onCreate()
-
-        if (BuildConfig.DEBUG)
-            Timber.plant(Timber.DebugTree())
-
-        appComponent = DaggerAppComponent.factory().create(applicationContext)
-    }
-
-}
+@Module
+interface DbModule

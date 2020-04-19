@@ -1,9 +1,9 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.utils
 
-import android.app.Application
+import android.app.Activity
+import android.app.Service
+import com.github.odaridavid.zikk.ZikkApp
 import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
 
 /**
  *
@@ -18,17 +18,8 @@ import timber.log.Timber
  * the License.
  *
  **/
-internal class ZikkApp : Application() {
+internal val Activity.injector: AppComponent
+    get() = (applicationContext as ZikkApp).appComponent
 
-    lateinit var appComponent: AppComponent
-
-    override fun onCreate() {
-        super.onCreate()
-
-        if (BuildConfig.DEBUG)
-            Timber.plant(Timber.DebugTree())
-
-        appComponent = DaggerAppComponent.factory().create(applicationContext)
-    }
-
-}
+internal val Service.injector: AppComponent
+    get() = (applicationContext as ZikkApp).appComponent

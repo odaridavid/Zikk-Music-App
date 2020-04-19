@@ -1,6 +1,8 @@
 package com.github.odaridavid.zikk.utils
 
+import android.content.Context
 import android.view.View
+import android.widget.Toast
 
 /**
  *
@@ -21,4 +23,8 @@ fun View.show() {
 
 fun View.hide() {
     visibility = View.GONE
+}
+
+fun Context.showToast(msg: String) {
+    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
 }

@@ -1,9 +1,4 @@
-package com.github.odaridavid.zikk
-
-import android.app.Application
-import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
+package com.github.odaridavid.zikk.albums
 
 /**
  *
@@ -18,17 +13,11 @@ import timber.log.Timber
  * the License.
  *
  **/
-internal class ZikkApp : Application() {
-
-    lateinit var appComponent: AppComponent
-
-    override fun onCreate() {
-        super.onCreate()
-
-        if (BuildConfig.DEBUG)
-            Timber.plant(Timber.DebugTree())
-
-        appComponent = DaggerAppComponent.factory().create(applicationContext)
-    }
-
-}
+data class Album(
+    val id: Long,
+    val title: String,
+    val artist: String,
+    val noOfSongs: Int,
+    val artistId: Long,
+    val latestYear: String
+)

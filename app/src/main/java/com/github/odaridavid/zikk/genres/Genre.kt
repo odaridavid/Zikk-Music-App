@@ -1,7 +1,4 @@
-package com.github.odaridavid.zikk.viewmodels
-
-import com.github.odaridavid.zikk.recents.RecentsRepository
-import com.github.odaridavid.zikk.songs.SongsRepository
+package com.github.odaridavid.zikk.genres
 
 /**
  *
@@ -16,7 +13,4 @@ import com.github.odaridavid.zikk.songs.SongsRepository
  * the License.
  *
  **/
-class DashboardViewModel(
-    val recentsRepository: RecentsRepository,
-    val songsRepository: SongsRepository
-)
+internal data class Genre(val id: Long, val name: String, val noOfTracks: Int)

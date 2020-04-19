@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "636424474576",
+    "firebase_url": "https://zikki-cad03.firebaseio.com",
+    "project_id": "zikki-cad03",
+    "storage_bucket": "zikki-cad03.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636424474576:android:8283c4217c46117b87f3d5",
+        "android_client_info": {
+          "package_name": "com.github.odaridavid.zikk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "636424474576-73p72pplpnp3njov7tufafhb2h0lvge1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXnRIrGnP22nZ-gvbTVm_LFdvgp_hfkEk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "636424474576-73p72pplpnp3njov7tufafhb2h0lvge1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

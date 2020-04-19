@@ -1,6 +1,9 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.genres
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+
 /**
  *
  * Copyright 2020 David Odari
@@ -14,4 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
  * the License.
  *
  **/
-class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard)
+@Module
+internal class GenreModule {
+
+    @Provides
+    fun providesGenreProvider(applicationContext: Context): GenreProvider {
+        return GenreProvider(applicationContext)
+    }
+}

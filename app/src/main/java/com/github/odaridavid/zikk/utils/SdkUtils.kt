@@ -1,4 +1,7 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.utils
+
+import android.os.Build
+import androidx.annotation.IntRange
 
 /**
  *
@@ -13,4 +16,7 @@ package com.github.odaridavid.zikk
  * the License.
  *
  **/
-class ZikkDatabase
+//TODO Use Annotation to include Android R constant value 1000
+fun versionFrom(@IntRange(from = 1, to = 29) versionCode: Int): Boolean {
+    return Build.VERSION.SDK_INT >= versionCode
+}

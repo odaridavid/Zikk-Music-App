@@ -1,5 +1,32 @@
 <resources>
     <string name="app_name">Zikk</string>
-    <string name="recent">Recent</string>
-    <string name="songs">Songs</string>
+
+    <!-- Titles-->
+    <string name="title_songs">Songs</string>
+    <string name="title_recent">Recent</string>
+    <string name="title_tracks">Tracks</string>
+    <string name="title_playlists">Playlists</string>
+    <string name="title_albums">Albums</string>
+    <string name="title_artists">Artists</string>
+    <string name="title_genres">Genres</string>
+
+    <!-- Info Messages-->
+    <string name="info_storage_permissions_not_granted">Storage Permissions Not Granted</string>
+
+    <!-- Quantity Strings-->
+    <plurals name="number_of_songs">
+        <item quantity="one">%d song</item>
+        <item quantity="other">%d songs</item>
+    </plurals>
+    <plurals name="number_of_albums">
+        <item quantity="one">%d album</item>
+        <item quantity="other">%d albums</item>
+    </plurals>
+
+    <!--Playback Notification-->
+    <string name="notification_playback_channel_name">Playback</string>
+    <string name="notification_playback_channel_description">Controls Media Playback</string>
+
+    <!--Playback Action-->
+    <string name="playback_action_pause">Pause</string>
 </resources>

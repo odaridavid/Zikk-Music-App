@@ -1,4 +1,8 @@
-package com.github.odaridavid.zikk.recents
+package com.github.odaridavid.zikk.tracks
+
+import android.content.Context
+import dagger.Module
+import dagger.Provides
 
 /**
  *
@@ -13,4 +17,11 @@ package com.github.odaridavid.zikk.recents
  * the License.
  *
  **/
-class RecentsRepository
+@Module
+internal class TrackModule {
+
+    @Provides
+    fun providesTrackProvider(context: Context): TrackProvider {
+        return TrackProvider(context)
+    }
+}

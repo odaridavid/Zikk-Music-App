@@ -1,4 +1,8 @@
-package com.github.odaridavid.zikk.recents
+package com.github.odaridavid.zikk.db
+
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import com.github.odaridavid.zikk.recents.Recent
 
 /**
  *
@@ -13,4 +17,5 @@ package com.github.odaridavid.zikk.recents
  * the License.
  *
  **/
-interface RecentsDao
+@Database(entities = [Recent::class], version = 1, exportSchema = false)
+internal abstract class ZikkDatabase : RoomDatabase()

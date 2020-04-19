@@ -1,4 +1,6 @@
-package com.github.odaridavid.zikk.songs
+package com.github.odaridavid.zikk.recents
+
+import dagger.Module
 
 /**
  *
@@ -13,4 +15,5 @@ package com.github.odaridavid.zikk.songs
  * the License.
  *
  **/
-class Song
+@Module
+internal class RecentsModule

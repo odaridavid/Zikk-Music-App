@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.songs
+package com.github.odaridavid.zikk.artists
 
 /**
  *
@@ -13,4 +13,9 @@ package com.github.odaridavid.zikk.songs
  * the License.
  *
  **/
-class SongsRepository
+internal data class Artist(
+    val id: Long,
+    val name: String,
+    val noOfAlbums: Int,
+    val noOfTracks: Int
+)

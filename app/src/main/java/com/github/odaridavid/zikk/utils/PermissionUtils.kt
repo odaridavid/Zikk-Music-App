@@ -1,9 +1,9 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.utils
 
-import android.app.Application
-import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 /**
  *
@@ -18,17 +18,11 @@ import timber.log.Timber
  * the License.
  *
  **/
-internal class ZikkApp : Application() {
+object PermissionUtils {
 
-    lateinit var appComponent: AppComponent
+    val STORAGE_PERMISSIONS = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 
-    override fun onCreate() {
-        super.onCreate()
-
-        if (BuildConfig.DEBUG)
-            Timber.plant(Timber.DebugTree())
-
-        appComponent = DaggerAppComponent.factory().create(applicationContext)
+    fun allPermissionsGranted(context: Context, permissions: Array<String>) = permissions.all {
+        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
-
 }

@@ -1,9 +1,8 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.playlists
 
-import android.app.Application
-import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
+import android.content.Context
+import dagger.Module
+import dagger.Provides
 
 /**
  *
@@ -18,17 +17,11 @@ import timber.log.Timber
  * the License.
  *
  **/
-internal class ZikkApp : Application() {
+@Module
+internal class PlaylistModule {
 
-    lateinit var appComponent: AppComponent
-
-    override fun onCreate() {
-        super.onCreate()
-
-        if (BuildConfig.DEBUG)
-            Timber.plant(Timber.DebugTree())
-
-        appComponent = DaggerAppComponent.factory().create(applicationContext)
+    @Provides
+    fun providesPlaylistProvider(applicationContext: Context): PlaylistProvider {
+        return PlaylistProvider(applicationContext)
     }
-
 }
