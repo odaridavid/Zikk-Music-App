@@ -14,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
+        <!--Activities-->
         <activity android:name=".ui.DashboardActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,7 +22,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--TODO Check if exported service requires permissions-->
+
+        <!--Services-->
         <service
             android:name=".playback.ZikkMediaService"
             android:exported="true"
@@ -30,6 +32,9 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
+        <!-- Broadcast Receivers-->
+        <receiver android:name=".playback.BecomingNoisyReceiver" />
     </application>
 
 </manifest>

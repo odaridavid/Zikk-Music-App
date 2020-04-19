@@ -1,5 +1,19 @@
 package com.github.odaridavid.zikk.playback
 
+/**
+ *
+ * Copyright 2020 David Odari
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *            http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ **/
+import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -16,18 +30,10 @@ import com.github.odaridavid.zikk.utils.injector
 import javax.inject.Inject
 
 /**
- *
- * Copyright 2020 David Odari
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- *            http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
- *
- **/
+ * Media Browser Service which controls the media session and co-ordinates with the media
+ * browser attached
+ * @see <a href="Media App Architecture">https://developer.android.com/guide/topics/media-apps/media-apps-overview</a>
+ */
 internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
     @Inject
@@ -48,12 +54,33 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var trackProvider: TrackProvider
 
+    @Inject
+    lateinit var playbackNotificationBuilder: PlaybackNotificationBuilder
+
+    @Inject
+    lateinit var trackPlayer: TrackPlayer
+
+    @Inject
+    lateinit var audioManager: AudioManager
+
+    @Inject
+    lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
+
     override fun onCreate() {
         injector.inject(this)
         super.onCreate()
 
         this.sessionToken = mediaSessionCompat.sessionToken
-        mediaSessionCompat.setCallback(MediaSessionCallback(this))
+        mediaSessionCompat.setCallback(
+            MediaSessionCallback(
+                this,
+                playbackNotificationBuilder,
+                mediaSessionCompat,
+                trackPlayer,
+                audioManager,
+                becomingNoisyReceiver
+            )
+        )
     }
 
     /**

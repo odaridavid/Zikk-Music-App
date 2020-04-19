@@ -1,8 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import android.os.Build
-import androidx.annotation.IntRange
-
 /**
  *
  * Copyright 2020 David Odari
@@ -16,7 +13,9 @@ import androidx.annotation.IntRange
  * the License.
  *
  **/
-//TODO Use Annotation to include Android R constant value 1000
+import android.os.Build
+import androidx.annotation.IntRange
+
 fun versionFrom(@IntRange(from = 1, to = 29) versionCode: Int): Boolean {
     return Build.VERSION.SDK_INT >= versionCode
 }

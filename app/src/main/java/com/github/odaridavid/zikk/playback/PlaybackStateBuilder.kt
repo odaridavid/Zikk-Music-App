@@ -1,8 +1,5 @@
 package com.github.odaridavid.zikk.playback
 
-import android.support.v4.media.session.PlaybackStateCompat
-import android.support.v4.media.session.PlaybackStateCompat.*
-
 /**
  * Copyright 2020 David Odari
  *
@@ -15,6 +12,9 @@ import android.support.v4.media.session.PlaybackStateCompat.*
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.PlaybackStateCompat.*
+
 internal object PlaybackStateBuilder {
     val instance: PlaybackStateCompat = Builder()
         .setActions(

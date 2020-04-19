@@ -1,11 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import android.content.Context
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaDescriptionCompat
-import androidx.annotation.StringRes
-import com.github.odaridavid.zikk.playback.MediaItemId
-
 /**
  *
  * Copyright 2020 David Odari
@@ -19,6 +13,12 @@ import com.github.odaridavid.zikk.playback.MediaItemId
  * the License.
  *
  **/
+import android.content.Context
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaDescriptionCompat
+import androidx.annotation.StringRes
+import com.github.odaridavid.zikk.playback.MediaItemId
+
 fun createMediaItemsRootCategories(
     context: Context,
     @StringRes title: Int,

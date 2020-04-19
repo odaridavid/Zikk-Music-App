@@ -1,6 +1,4 @@
-package com.github.odaridavid.zikk.recents
-
-import androidx.room.Entity
+package com.github.odaridavid.zikk.playback
 
 /**
  *
@@ -15,5 +13,17 @@ import androidx.room.Entity
  * the License.
  *
  **/
-@Entity(tableName = "recently_played")
-internal class Recent
+class TrackPlayer {
+    //TODO Create Media Player
+    fun start() {
+
+    }
+
+    fun pause() {
+
+    }
+
+    fun stop() {
+
+    }
+}

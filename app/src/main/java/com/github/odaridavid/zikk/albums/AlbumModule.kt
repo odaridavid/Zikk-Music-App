@@ -1,9 +1,5 @@
 package com.github.odaridavid.zikk.albums
 
-import android.content.Context
-import dagger.Module
-import dagger.Provides
-
 /**
  *
  * Copyright 2020 David Odari
@@ -17,6 +13,13 @@ import dagger.Provides
  * the License.
  *
  **/
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+
+/**
+ * Creats Album Module Dependencies
+ */
 @Module
 internal class AlbumModule {
 
