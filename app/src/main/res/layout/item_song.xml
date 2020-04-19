@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
 
  Copyright  David Odari
 
@@ -17,7 +16,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/default_margin">
+    android:layout_marginStart="@dimen/default_margin"
+    android:layout_marginTop="@dimen/small_margin"
+    android:layout_marginEnd="@dimen/default_margin"
+    android:layout_marginBottom="@dimen/small_margin"
+    android:clickable="true"
+    android:focusable="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -26,24 +30,25 @@
         <ImageView
             android:id="@+id/song_art_image_view"
             android:layout_width="@dimen/song_art_width"
+            android:scaleType="fitXY"
             android:layout_height="@dimen/song_art_height"
-            android:background="@color/colorAccent"
+            android:background="@drawable/bg_no_art"
             android:contentDescription="Music Art"
-            android:src="@drawable/ic_music_note_black_24dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!--TODO Use Barriers -->
         <TextView
-            android:id="@+id/song_name_text_view"
+            android:id="@+id/track_title_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/small_margin"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textStyle="bold"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@id/playback_button"
+            app:layout_constraintEnd_toStartOf="@+id/song_duration_text_view"
             app:layout_constraintStart_toEndOf="@id/song_art_image_view"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Lifes Good Man" />
@@ -56,21 +61,24 @@
             android:ellipsize="end"
             android:maxLines="1"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@id/playback_button"
+            app:layout_constraintEnd_toStartOf="@+id/song_duration_text_view"
             app:layout_constraintStart_toEndOf="@id/song_art_image_view"
-            app:layout_constraintTop_toBottomOf="@id/song_name_text_view"
+            app:layout_constraintTop_toBottomOf="@id/track_title_text_view"
             tools:text="The Cow" />
 
-        <ImageButton
-            android:id="@+id/playback_button"
-            android:layout_width="@dimen/song_play_button_width"
-            android:layout_height="@dimen/song_play_button_height"
-            android:background="@android:color/transparent"
-            android:contentDescription="Playback Button"
-            android:src="@drawable/ic_play_arrow_black_48dp"
+        <TextView
+            android:id="@+id/song_duration_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/small_margin"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="1:28" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

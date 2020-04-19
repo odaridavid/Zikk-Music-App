@@ -2,7 +2,10 @@ package com.github.odaridavid.zikk.tracks
 
 import android.content.Context
 import android.database.Cursor
+import android.net.Uri
 import android.provider.MediaStore
+import com.github.odaridavid.zikk.albums.AlbumProvider
+import timber.log.Timber
 
 /**
  *
@@ -17,7 +20,7 @@ import android.provider.MediaStore
  * the License.
  *
  **/
-internal class TrackProvider(val applicationContext: Context) {
+internal class TrackProvider(val applicationContext: Context, val albumProvider: AlbumProvider) {
 
     /**
      * Returns a list of tracks after extracting from a cursor
@@ -42,6 +45,9 @@ internal class TrackProvider(val applicationContext: Context) {
         val displayName = getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
         val track = getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
         val duration = getColumnIndexOrThrow(MEDIA_STORE_AUDIO_DURATION_COLUMN)
+        val fileUri =
+            Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getString(trackId))
+        val albumArt = getAlbumArt(getString(albumName))
         return Track(
             id = getLong(trackId),
             albumId = getLong(albumId),
@@ -51,8 +57,15 @@ internal class TrackProvider(val applicationContext: Context) {
             title = getString(title),
             displayName = getString(displayName),
             track = getString(track),
-            duration = getString(duration)
+            duration = getString(duration),
+            filePath = fileUri.toString(),
+            albumArt = albumArt
         )
+    }
+
+    fun getAlbumArt(album: String): String {
+        val albums = albumProvider.loadAlbumsByQuery("album=?", arrayOf(album))
+        return if (albums.isEmpty()) "" else albums[0].albumArt
     }
 
     private fun getTrackCursor(): Cursor? {
@@ -60,7 +73,9 @@ internal class TrackProvider(val applicationContext: Context) {
         val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection: Array<String> = getTrackColumns()
         val sortOrder = "${MediaStore.Audio.Media.DATE_MODIFIED} DESC"
-        return cr.query(uri, projection, null, null, sortOrder)
+        val selection = "is_music=?" //Selects only music,leaves out media such as notifications
+        val selectionArgs = arrayOf("1")
+        return cr.query(uri, projection, selection, selectionArgs, sortOrder)
     }
 
     private fun getTrackColumns(): Array<String> {

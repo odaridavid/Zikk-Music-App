@@ -65,7 +65,7 @@ internal class PlaybackModule {
     }
 
     @Provides
-    fun providesBecomingNoisyReceiver(): BecomingNoisyReceiver {
-        return BecomingNoisyReceiver()
+    fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
+        return BecomingNoisyReceiver(mediaControllerCompat)
     }
 }

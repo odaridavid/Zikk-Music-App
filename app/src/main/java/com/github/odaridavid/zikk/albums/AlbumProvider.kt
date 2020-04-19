@@ -1,4 +1,5 @@
 package com.github.odaridavid.zikk.albums
+
 /**
  *
  * Copyright 2020 David Odari
@@ -14,6 +15,7 @@ package com.github.odaridavid.zikk.albums
  **/
 import android.content.Context
 import android.database.Cursor
+import android.net.Uri
 import android.provider.MediaStore
 
 
@@ -33,44 +35,65 @@ internal class AlbumProvider(private val applicationContext: Context) {
     }
 
     /**
+     * Returns a filtered list of albums based on the query after extracting from a cursor
+     */
+    fun loadAlbumsByQuery(selection: String, selectionArgs: Array<String>): List<Album> {
+        val albums = mutableListOf<Album>()
+        val cursor = getAlbumsCursor(selection, selectionArgs)
+            ?: throw IllegalStateException("Albums cursor is null")
+        if (cursor.count != 0) {
+            cursor.moveToFirst()
+            do {
+                albums.add(cursor.mapToAlbumEntity())
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return albums
+    }
+
+    /**
      * Convert cursor rows to an album entity
      */
     private fun Cursor.mapToAlbumEntity(): Album {
-        val albumId = getColumnIndexOrThrow(MediaStore.Audio.Albums.ALBUM_ID)
+        val id = getColumnIndexOrThrow(MediaStore.Audio.Albums._ID)
         val albumTitle = getColumnIndexOrThrow(MediaStore.Audio.Albums.ALBUM)
         val albumArtist = getColumnIndexOrThrow(MediaStore.Audio.Albums.ARTIST)
         val noOfSongs = getColumnIndexOrThrow(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
-        val artistId = getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
-        val modificationYear = getColumnIndexOrThrow(MediaStore.Audio.Albums.LAST_YEAR)
+        val albumArt = getAlbumArtPath(getLong(id))
         return Album(
-            id = getLong(albumId),
+            id = getLong(id),
             title = getString(albumTitle),
             artist = getString(albumArtist),
             noOfSongs = getInt(noOfSongs),
-            artistId = getLong(artistId),
-            latestYear = getString(modificationYear)
+            albumArt = albumArt
         )
+    }
+
+    private fun getAlbumArtPath(id: Long): String {
+        val artworkUri = Uri.parse("content://media/external/audio/albumart")
+        return Uri.withAppendedPath(artworkUri, "$id").toString()
     }
 
     /**
      * Loads information on albums using a content resolver and returns a cursor object
      */
-    private fun getAlbumsCursor(): Cursor? {
+    private fun getAlbumsCursor(
+        selection: String? = null,
+        selectionArgs: Array<String>? = null
+    ): Cursor? {
         val cr = applicationContext.contentResolver
         val uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI
         val projection: Array<String> = getAlbumColumns()
         val sortOrder = "${MediaStore.Audio.Albums.LAST_YEAR} DESC"
-        return cr.query(uri, projection, null, null, sortOrder)
+        return cr.query(uri, projection, selection, selectionArgs, sortOrder)
     }
 
-    //TODO Check on deprecated album art column alternative referencing https://developer.android.com/reference/android/content/ContentResolver#loadThumbnail(android.net.Uri,%20android.util.Size,%20android.os.CancellationSignal)
     private fun getAlbumColumns(): Array<String> {
         return arrayOf(
-            MediaStore.Audio.Albums.ALBUM_ID,
+            MediaStore.Audio.Albums._ID,
             MediaStore.Audio.Albums.ARTIST,
-            MediaStore.Audio.Albums.LAST_YEAR,
-            MediaStore.Audio.Albums.NUMBER_OF_SONGS,
-            MediaStore.Audio.Media.ARTIST_ID //Albums Artist Id Constant avail on Q >
+            MediaStore.Audio.Albums.ALBUM,
+            MediaStore.Audio.Albums.NUMBER_OF_SONGS
         )
     }
 

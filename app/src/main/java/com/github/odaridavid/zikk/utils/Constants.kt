@@ -1,9 +1,4 @@
-package com.github.odaridavid.zikk.tracks
-
-import android.content.Context
-import com.github.odaridavid.zikk.albums.AlbumProvider
-import dagger.Module
-import dagger.Provides
+package com.github.odaridavid.zikk.utils
 
 /**
  *
@@ -18,16 +13,6 @@ import dagger.Provides
  * the License.
  *
  **/
-@Module
-internal class TrackModule {
-
-    @Provides
-    fun providesTrackProvider(context: Context, albumProvider: AlbumProvider): TrackProvider {
-        return TrackProvider(context, albumProvider)
-    }
-
-    @Provides
-    fun providesTrackRepository(trackProvider: TrackProvider): TrackRepository {
-        return TrackRepository(trackProvider)
-    }
+object Constants {
+    const val PLAYBACK_NOTIFICATION_ID = 1000
 }

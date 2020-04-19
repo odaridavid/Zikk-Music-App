@@ -1,10 +1,5 @@
 package com.github.odaridavid.zikk.tracks
 
-import android.content.Context
-import com.github.odaridavid.zikk.albums.AlbumProvider
-import dagger.Module
-import dagger.Provides
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,16 +13,7 @@ import dagger.Provides
  * the License.
  *
  **/
-@Module
-internal class TrackModule {
+internal class TrackRepository(val provider: TrackProvider) {
 
-    @Provides
-    fun providesTrackProvider(context: Context, albumProvider: AlbumProvider): TrackProvider {
-        return TrackProvider(context, albumProvider)
-    }
-
-    @Provides
-    fun providesTrackRepository(trackProvider: TrackProvider): TrackRepository {
-        return TrackRepository(trackProvider)
-    }
+    fun getAllTracks() = provider.loadAllTracks()
 }

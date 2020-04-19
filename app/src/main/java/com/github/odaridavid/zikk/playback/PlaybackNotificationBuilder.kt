@@ -25,6 +25,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
 import com.github.odaridavid.zikk.R
+import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.versionFrom
 import javax.inject.Inject
 
@@ -89,7 +90,9 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                         .setShowActionsInCompactView(0)
                 )
             }
-        return notificationBuilder.build()
+        val notification = notificationBuilder.build()
+        notificationManager.notify(PLAYBACK_NOTIFICATION_ID, notification)
+        return notification
     }
 
     private fun createPlaybackNotificationChannel() {

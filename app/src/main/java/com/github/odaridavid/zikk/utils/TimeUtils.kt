@@ -1,9 +1,6 @@
-package com.github.odaridavid.zikk.tracks
+package com.github.odaridavid.zikk.utils
 
-import android.content.Context
-import com.github.odaridavid.zikk.albums.AlbumProvider
-import dagger.Module
-import dagger.Provides
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -18,16 +15,12 @@ import dagger.Provides
  * the License.
  *
  **/
-@Module
-internal class TrackModule {
-
-    @Provides
-    fun providesTrackProvider(context: Context, albumProvider: AlbumProvider): TrackProvider {
-        return TrackProvider(context, albumProvider)
-    }
-
-    @Provides
-    fun providesTrackRepository(trackProvider: TrackProvider): TrackRepository {
-        return TrackRepository(trackProvider)
-    }
+fun convertMillisecondsToDuration(millis: Long): String {
+    val hrs = TimeUnit.MILLISECONDS.toHours(millis)
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1)
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1)
+    return if (hrs > 0L)
+        String.format("%02d:%02d:%02d", hrs, minutes, seconds)
+    else
+        String.format("%02d:%02d", minutes, seconds)
 }
