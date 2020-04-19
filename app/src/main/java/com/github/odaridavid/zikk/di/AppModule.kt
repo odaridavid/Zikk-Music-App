@@ -1,10 +1,5 @@
 package com.github.odaridavid.zikk.di
 
-import android.app.NotificationManager
-import android.content.Context
-import dagger.Module
-import dagger.Provides
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,11 +13,25 @@ import dagger.Provides
  * the License.
  *
  **/
+import android.app.NotificationManager
+import android.content.Context
+import android.media.AudioManager
+import dagger.Module
+import dagger.Provides
+
+/**
+ * Application wide dependencies
+ */
 @Module
 class AppModule {
 
     @Provides
     fun providesNotificationManager(context: Context): NotificationManager {
         return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    @Provides
+    fun providesAudioManager(context: Context): AudioManager {
+        return context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 }

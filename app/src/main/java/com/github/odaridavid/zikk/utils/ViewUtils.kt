@@ -1,9 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import android.content.Context
-import android.view.View
-import android.widget.Toast
-
 /**
  *
  * Copyright 2020 David Odari
@@ -17,6 +13,10 @@ import android.widget.Toast
  * the License.
  *
  **/
+import android.content.Context
+import android.view.View
+import android.widget.Toast
+
 fun View.show() {
     visibility = View.VISIBLE
 }

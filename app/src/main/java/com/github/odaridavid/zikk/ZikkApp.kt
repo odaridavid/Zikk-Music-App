@@ -1,10 +1,5 @@
 package com.github.odaridavid.zikk
 
-import android.app.Application
-import com.github.odaridavid.zikk.di.AppComponent
-import com.github.odaridavid.zikk.di.DaggerAppComponent
-import timber.log.Timber
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,6 +13,11 @@ import timber.log.Timber
  * the License.
  *
  **/
+import android.app.Application
+import com.github.odaridavid.zikk.di.AppComponent
+import com.github.odaridavid.zikk.di.DaggerAppComponent
+import timber.log.Timber
+
 internal class ZikkApp : Application() {
 
     lateinit var appComponent: AppComponent

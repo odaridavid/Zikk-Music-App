@@ -1,10 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,6 +13,11 @@ import androidx.core.content.ContextCompat
  * the License.
  *
  **/
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+
 object PermissionUtils {
 
     val STORAGE_PERMISSIONS = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)

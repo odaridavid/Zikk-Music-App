@@ -1,8 +1,4 @@
-package com.github.odaridavid.zikk.db
-
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import com.github.odaridavid.zikk.recents.Recent
+package com.github.odaridavid.zikk.playback
 
 /**
  *
@@ -17,5 +13,22 @@ import com.github.odaridavid.zikk.recents.Recent
  * the License.
  *
  **/
-@Database(entities = [Recent::class], version = 1, exportSchema = false)
-internal abstract class ZikkDatabase : RoomDatabase()
+import android.support.v4.media.MediaBrowserCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+
+class MediaBrowserLifecycleObserver(
+    private val mediaBrowser: MediaBrowserCompat
+) : LifecycleObserver {
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun connectMediaBrowser() {
+        mediaBrowser.connect()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun disconnectMediaBrowser() {
+        mediaBrowser.disconnect()
+    }
+}

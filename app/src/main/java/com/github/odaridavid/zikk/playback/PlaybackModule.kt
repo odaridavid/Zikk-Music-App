@@ -1,13 +1,5 @@
 package com.github.odaridavid.zikk.playback
 
-import android.app.NotificationManager
-import android.content.Context
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
-import dagger.Module
-import dagger.Provides
-
 /**
  *
  * Copyright 2020 David Odari
@@ -21,14 +13,21 @@ import dagger.Provides
  * the License.
  *
  **/
+import android.app.NotificationManager
+import android.content.Context
+import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import dagger.Module
+import dagger.Provides
+
 @Module
 internal class PlaybackModule {
 
     @Provides
     fun providesMediaSessionCompat(
         context: Context,
-        playbackState: PlaybackStateCompat,
-        callback: MediaSessionCompat.Callback
+        playbackState: PlaybackStateCompat
     ): MediaSessionCompat {
         return MediaSessionCompat(context, "Zikk Media Service").apply {
             setPlaybackState(playbackState)
@@ -47,11 +46,26 @@ internal class PlaybackModule {
         mediaSessionCompat: MediaSessionCompat,
         notificationManager: NotificationManager
     ): PlaybackNotificationBuilder {
-        return PlaybackNotificationBuilder(context, notificationManager, mediaControllerCompat,mediaSessionCompat)
+        return PlaybackNotificationBuilder(
+            context,
+            notificationManager,
+            mediaControllerCompat,
+            mediaSessionCompat
+        )
     }
 
     @Provides
     fun providesMediaControllerCompat(mediaSessionCompat: MediaSessionCompat): MediaControllerCompat {
         return mediaSessionCompat.controller
+    }
+
+    @Provides
+    fun providesTrackPlayer(): TrackPlayer {
+        return TrackPlayer()
+    }
+
+    @Provides
+    fun providesBecomingNoisyReceiver(): BecomingNoisyReceiver {
+        return BecomingNoisyReceiver()
     }
 }

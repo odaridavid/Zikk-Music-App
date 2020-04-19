@@ -1,9 +1,5 @@
 package com.github.odaridavid.zikk.playlists
 
-import android.content.Context
-import android.database.Cursor
-import android.provider.MediaStore
-
 /**
  *
  * Copyright 2020 David Odari
@@ -17,6 +13,10 @@ import android.provider.MediaStore
  * the License.
  *
  **/
+import android.content.Context
+import android.database.Cursor
+import android.provider.MediaStore
+
 internal class PlaylistProvider(val applicationContext: Context) {
 
     /**

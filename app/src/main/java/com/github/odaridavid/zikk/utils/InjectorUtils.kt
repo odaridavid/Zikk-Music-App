@@ -1,10 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import android.app.Activity
-import android.app.Service
-import com.github.odaridavid.zikk.ZikkApp
-import com.github.odaridavid.zikk.di.AppComponent
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,6 +13,11 @@ import com.github.odaridavid.zikk.di.AppComponent
  * the License.
  *
  **/
+import android.app.Activity
+import android.app.Service
+import com.github.odaridavid.zikk.ZikkApp
+import com.github.odaridavid.zikk.di.AppComponent
+
 internal val Activity.injector: AppComponent
     get() = (applicationContext as ZikkApp).appComponent
 

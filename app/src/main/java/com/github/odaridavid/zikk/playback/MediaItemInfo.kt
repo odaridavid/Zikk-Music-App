@@ -1,7 +1,5 @@
 package com.github.odaridavid.zikk.playback
 
-import androidx.annotation.StringRes
-
 /**
  *
  * Copyright 2020 David Odari
@@ -15,4 +13,11 @@ import androidx.annotation.StringRes
  * the License.
  *
  **/
-data class MediaItemInfo(@StringRes val title: Int, val id: MediaItemId,@StringRes val subtitle: Int)
+import androidx.annotation.StringRes
+
+
+data class MediaItemInfo(
+    @StringRes val title: Int,
+    val id: MediaItemId,
+    @StringRes val subtitle: Int
+)

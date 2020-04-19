@@ -1,6 +1,4 @@
-package com.github.odaridavid.zikk.recents
-
-import dagger.Module
+package com.github.odaridavid.zikk.playback
 
 /**
  *
@@ -14,6 +12,20 @@ import dagger.Module
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
+ *
  **/
-@Module
-internal class RecentsModule
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.media.AudioManager
+
+/**
+ * @see <a href="https://developer.android.com/guide/topics/media-apps/volume-and-earphones#becoming-noisy">Don't be noisy</a>
+ */
+class BecomingNoisyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+            //TODO Pause the playback
+        }
+    }
+}
