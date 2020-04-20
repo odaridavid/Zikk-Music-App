@@ -1,4 +1,5 @@
 package com.github.odaridavid.zikk.di
+
 /**
  *
  * Copyright 2020 David Odari
@@ -20,6 +21,7 @@ import com.github.odaridavid.zikk.playback.PlaybackModule
 import com.github.odaridavid.zikk.playback.ZikkMediaService
 import com.github.odaridavid.zikk.playlists.PlaylistModule
 import com.github.odaridavid.zikk.tracks.TrackModule
+import com.github.odaridavid.zikk.ui.DashboardActivity
 import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Singleton
@@ -45,6 +47,8 @@ import javax.inject.Singleton
 internal interface AppComponent {
 
     fun inject(zikkMediaService: ZikkMediaService)
+
+    fun inject(dashboardActivity: DashboardActivity)
 
     @Component.Factory
     interface Factory {

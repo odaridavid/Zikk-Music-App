@@ -2,6 +2,8 @@
 
 A sample media player application
 
+### Demo/Screenshots
+
 ### Prerequisites
 
 ### Libraries

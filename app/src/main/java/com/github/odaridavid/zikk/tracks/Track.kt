@@ -22,5 +22,7 @@ internal data class Track(
     val artist: String,
     val displayName: String,
     val track: String,
-    val duration: String
+    val duration: String,
+    val filePath: String,
+    val albumArt: String
 )

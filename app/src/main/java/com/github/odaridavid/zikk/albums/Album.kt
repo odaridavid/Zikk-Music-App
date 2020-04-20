@@ -18,6 +18,5 @@ data class Album(
     val title: String,
     val artist: String,
     val noOfSongs: Int,
-    val artistId: Long,
-    val latestYear: String
+    val albumArt: String
 )

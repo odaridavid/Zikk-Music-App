@@ -21,6 +21,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
+import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.versionFrom
 
 /**
@@ -33,7 +34,7 @@ internal class MediaSessionCallback(
     private val trackPlayer: TrackPlayer,
     private val audioManager: AudioManager,
     private val becomingNoisyReceiver: BecomingNoisyReceiver
-) : MediaSessionCompat.Callback() {
+) : MediaSessionCompat.Callback(), AudioManager.OnAudioFocusChangeListener {
 
     private var audioFocusRequest: AudioFocusRequest? = null
 
@@ -43,7 +44,7 @@ internal class MediaSessionCallback(
         // To output audio, it should request audio focus.Only one app can hold focus at a time
         val request = if (versionFrom(Build.VERSION_CODES.O)) {
             audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .setOnAudioFocusChangeListener(this)
                 .setAudioAttributes(AudioAttributes.Builder().run {
                     setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     build()
@@ -52,9 +53,7 @@ internal class MediaSessionCallback(
             audioManager.requestAudioFocus(audioFocusRequest!!)
         } else {
             audioManager.requestAudioFocus(
-                audioFocusChangeListener,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN
+                this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN
             )
         }
 
@@ -77,7 +76,7 @@ internal class MediaSessionCallback(
             registerReceiver(becomingNoisyReceiver, intentFilter)
 
             val notification = playbackNotificationBuilder.buildNotification()
-            startForeground(NOTIFICATION_ID, notification)
+            startForeground(PLAYBACK_NOTIFICATION_ID, notification)
         }
     }
 
@@ -96,13 +95,7 @@ internal class MediaSessionCallback(
     override fun onStop() {
         super.onStop()
         // Abandon audio focus
-        if (versionFrom(Build.VERSION_CODES.O)) {
-            audioFocusRequest?.run {
-                audioManager.abandonAudioFocusRequest(this)
-            }
-        } else {
-            audioManager.abandonAudioFocus(audioFocusChangeListener)
-        }
+        releaseAudioFocus()
 
         with(serviceContext) {
             // A started service must be explicitly stopped, whether or not it's bound. This ensures that your player continues to perform even if the controlling UI activity unbinds
@@ -115,6 +108,16 @@ internal class MediaSessionCallback(
         }
     }
 
+    private fun releaseAudioFocus() {
+        if (versionFrom(Build.VERSION_CODES.O)) {
+            audioFocusRequest?.run {
+                audioManager.abandonAudioFocusRequest(this)
+            }
+        } else {
+            audioManager.abandonAudioFocus(this)
+        }
+    }
+
     override fun onSkipToNext() {
         super.onSkipToNext()
     }
@@ -123,12 +126,26 @@ internal class MediaSessionCallback(
         super.onSkipToPrevious()
     }
 
-    companion object {
-        private const val NOTIFICATION_ID = 1000
-        private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-        private val audioFocusChangeListener =
-            AudioManager.OnAudioFocusChangeListener {
-                //TODO Implement AudioFocus Listener
+    override fun onAudioFocusChange(focusChange: Int) {
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                //TODO Switch Implementation to Reduce Volume
+                trackPlayer.pause()
             }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                releaseAudioFocus()
+                trackPlayer.stop()
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                //TODO Switch Implementation to Increase volume
+                trackPlayer.start()
+            }
+        }
     }
+
+    companion object {
+        private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    }
+
+
 }

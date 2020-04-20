@@ -14,32 +14,75 @@ package com.github.odaridavid.zikk.ui
  *
  **/
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.widget.ImageView
+import android.view.View
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.playback.MediaBrowserLifecycleObserver
 import com.github.odaridavid.zikk.playback.ZikkMediaService
+import com.github.odaridavid.zikk.tracks.TrackRepository
+import com.github.odaridavid.zikk.tracks.TracksAdapter
 import com.github.odaridavid.zikk.utils.PermissionUtils
+import com.github.odaridavid.zikk.utils.injector
 import com.github.odaridavid.zikk.utils.showToast
+import com.github.odaridavid.zikk.utils.versionFrom
+import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Main screen on app launch
  */
-class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
+internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard),
+    MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
-    //TODO Load music to UI
+    //TODO DI and Code Cleanup
     private lateinit var mediaBrowser: MediaBrowserCompat
+    private var mediaPlayer: MediaPlayer? = null
+
+    @Inject
+    lateinit var tracksRepository: TrackRepository
+    private lateinit var tracksRecyclerView: RecyclerView
+    private lateinit var tracksAdapter: TracksAdapter
+    private val dashboardViewModel: DashboardViewModel by viewModels()
+    private val mediaControllerCallback = object : MediaControllerCompat.Callback() {
+        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+            super.onPlaybackStateChanged(state)
+            state?.run {
+                dashboardViewModel.setPlaybackState(this)
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+            super.onMetadataChanged(metadata)
+            metadata?.run {
+                dashboardViewModel.setNowPlayingMetadata(this)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        injector.inject(this)
         super.onCreate(savedInstanceState)
+        matchStatusBarWithBackground()
+        init()
         checkPermissionsAndInit(onPermissionNotGranted = {
             ActivityCompat.requestPermissions(
                 this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
@@ -47,10 +90,51 @@ class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
         })
     }
 
+    private fun matchStatusBarWithBackground() {
+        if (versionFrom(Build.VERSION_CODES.M)) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            window.statusBarColor = getColor(android.R.color.background_light)
+        }
+    }
+
+    private fun init() {
+        tracksRecyclerView = findViewById(R.id.tracks_recycler_view)
+        tracksAdapter = TracksAdapter { id ->
+            val contentUri: Uri =
+                ContentUris.withAppendedId(
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+            mediaPlayer?.reset()
+            mediaPlayer?.setDataSource(applicationContext, contentUri)
+            mediaPlayer?.prepareAsync()
+        }
+
+        tracksRecyclerView.adapter = ScaleInAnimationAdapter(tracksAdapter)
+        //TODO Bind Media player to service
+        //TODO Create media controls
+        mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            setOnPreparedListener(this@DashboardActivity)
+            setOnErrorListener(this@DashboardActivity)
+        }
+    }
+
     private inline fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {
         if (!PermissionUtils.allPermissionsGranted(this, PermissionUtils.STORAGE_PERMISSIONS))
             onPermissionNotGranted()
         else {
+            //TODO Cleanup move logic to viewmodel and show loading state while fetching tracks
+            GlobalScope.launch(Dispatchers.IO) {
+                val tracks = tracksRepository.getAllTracks()
+                withContext(Dispatchers.Main) {
+                    tracksAdapter.submitList(tracks)
+                }
+            }
+
             mediaBrowser = MediaBrowserCompat(
                 this,
                 ComponentName(this, ZikkMediaService::class.java),
@@ -63,9 +147,12 @@ class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
                      */
                     override fun onConnected() {
                         super.onConnected()
+                        Timber.i("Connection with media browser successful")
                         mediaBrowser.sessionToken.also { token ->
                             val mediaController =
-                                MediaControllerCompat(this@DashboardActivity, token)
+                                MediaControllerCompat(this@DashboardActivity, token).apply {
+                                    registerCallback(mediaControllerCallback)
+                                }
 
                             /* Save the controller */
                             MediaControllerCompat.setMediaController(
@@ -73,13 +160,21 @@ class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
                                 mediaController
                             )
                         }
+                    }
 
-                        buildTransportControls()
+                    override fun onConnectionSuspended() {
+                        super.onConnectionSuspended()
+                        Timber.i("Disconnected from media browser ")
+                    }
+
+                    override fun onConnectionFailed() {
+                        super.onConnectionFailed()
+                        Timber.i("Connection with media browser failed")
                     }
                 },
                 null
             )
-            lifecycle.addObserver(MediaBrowserLifecycleObserver(mediaBrowser))
+            mediaBrowser.connect()
         }
     }
 
@@ -92,7 +187,7 @@ class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
 
     override fun onStop() {
         super.onStop()
-        MediaControllerCompat.getMediaController(this)?.unregisterCallback(controllerCallback)
+        MediaControllerCompat.getMediaController(this)?.unregisterCallback(mediaControllerCallback)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -105,42 +200,25 @@ class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
         }
     }
 
-    private fun buildTransportControls() {
-        val mediaController = MediaControllerCompat.getMediaController(this)
-        // Grab the view for the play/pause button
-        findViewById<ImageView>(R.id.dashboard_playback_button).apply {
-            setOnClickListener {
-                // Since this is a play/pause button, you'll need to test the current state
-                // and choose the action accordingly
-                val pbState = mediaController.playbackState.state
-                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                    mediaController.transportControls.pause()
-                } else {
-                    mediaController.transportControls.play()
-                }
-            }
-        }
-
-        // TODO Display the initial state
-        val metadata = mediaController.metadata
-        val pbState = mediaController.playbackState
-
-        // Register a Callback to stay in sync
-        mediaController.registerCallback(controllerCallback)
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaBrowser.disconnect()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 
+    override fun onPrepared(mediaPlayer: MediaPlayer?) {
+        Timber.i("Media Player prepared")
+        mediaPlayer?.start()
+    }
+
+    override fun onError(mediaPlayer: MediaPlayer?, what: Int, extra: Int): Boolean {
+        Timber.d("Mediaplayer Error:$what")
+        mediaPlayer?.reset()
+        return true
+    }
 
     companion object {
         private const val RQ_STORAGE_PERMISSIONS = 1000
-        private val controllerCallback = object : MediaControllerCompat.Callback() {
-
-            override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-                //TODO Update Metadata
-            }
-
-            override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-                //TODO Update UI with Playbackstate
-            }
-        }
     }
 }
