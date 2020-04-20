@@ -13,17 +13,75 @@ package com.github.odaridavid.zikk.playback
  * the License.
  *
  **/
-class TrackPlayer {
-    //TODO Create Media Player
-    fun start() {
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.net.Uri
+import timber.log.Timber
 
+
+class TrackPlayer : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+
+    private var mediaPlayer: MediaPlayer? = null
+
+    init {
+        initPlayer()
+    }
+
+    private fun initPlayer() {
+        mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            setOnPreparedListener(this@TrackPlayer)
+            setOnErrorListener(this@TrackPlayer)
+        }
+    }
+
+    fun prepare() {
+        Timber.i("Media Player Preparing")
+        mediaPlayer?.prepareAsync()
+    }
+
+    fun start() {
+        Timber.i("Media Player Starting")
+        mediaPlayer?.start()
     }
 
     fun pause() {
-
+        Timber.i("Media Player Paused")
+        mediaPlayer?.pause()
     }
 
     fun stop() {
+        Timber.i("Media Player Stopped")
+        mediaPlayer?.stop()
+    }
 
+    fun reset() {
+        Timber.i("Media Player Reset")
+        mediaPlayer?.reset()
+    }
+
+    fun release() {
+        Timber.i("Media Player Released")
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
+    fun setDataSource(context: Context, uri: Uri) {
+        mediaPlayer?.setDataSource(context, uri)
+    }
+
+    override fun onPrepared(mediaPlayer: MediaPlayer?) {
+        Timber.i("Media Player Prepared")
+        start()
+    }
+
+    override fun onError(mediaPlayer: MediaPlayer?, what: Int, extra: Int): Boolean {
+        Timber.i("Media Player Error : $what")
+        reset()
+        return true
     }
 }

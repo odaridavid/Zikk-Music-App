@@ -13,6 +13,7 @@ package com.github.odaridavid.zikk.playback
  * the License.
  *
  **/
+import android.app.PendingIntent
 import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -28,6 +29,7 @@ import com.github.odaridavid.zikk.utils.createMediaItemsRootCategories
 import com.github.odaridavid.zikk.utils.generateMediaItem
 import com.github.odaridavid.zikk.utils.injector
 import javax.inject.Inject
+
 
 /**
  * Media Browser Service which controls the media session and co-ordinates with the media
@@ -70,7 +72,16 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
         injector.inject(this)
         super.onCreate()
 
+        // Build a PendingIntent that can be used to launch the UI.
+        val sessionActivityPendingIntent =
+            packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
+                PendingIntent.getActivity(this, 0, sessionIntent, 0)
+            }
+        mediaSessionCompat.setSessionActivity(sessionActivityPendingIntent)
+
+
         this.sessionToken = mediaSessionCompat.sessionToken
+
         mediaSessionCompat.setCallback(
             MediaSessionCallback(
                 this,
@@ -81,6 +92,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                 becomingNoisyReceiver
             )
         )
+
     }
 
     /**

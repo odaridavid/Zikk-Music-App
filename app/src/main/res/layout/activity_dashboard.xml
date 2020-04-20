@@ -17,7 +17,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.DashboardActivity">
-
+    <!--TODO Use styles where necessary-->
+    <ProgressBar
+        android:id="@+id/dashboard_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/songs_text_view"
@@ -37,14 +45,92 @@
         android:orientation="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constrainedHeight="true"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/now_playing_card"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/songs_text_view"
-        app:layout_constraintVertical_bias="0.019"
-        tools:itemCount="10"
+        app:layout_constraintVertical_bias="0.030"
+        tools:itemCount="2"
         tools:listitem="@layout/item_song" />
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/now_playing_card"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        app:cardBackgroundColor="@android:color/black"
+        app:cardCornerRadius="0dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/album_art_image_view"
+                android:layout_width="72dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_no_art"
+                android:scaleType="fitXY"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/track_title_text_view"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/small_margin"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="-"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textColor="@android:color/white"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toTopOf="@+id/track_artist_text_view"
+                app:layout_constraintEnd_toStartOf="@+id/play_pause_button"
+                app:layout_constraintStart_toEndOf="@+id/album_art_image_view"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Codeine Crazy (Remix) Quality Control" />
+
+            <TextView
+                android:id="@+id/track_artist_text_view"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/small_margin"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="-"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textColor="@android:color/darker_gray"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/play_pause_button"
+                app:layout_constraintStart_toEndOf="@+id/album_art_image_view"
+                tools:text="Future" />
+
+            <ImageButton
+                android:id="@+id/play_pause_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:src="@drawable/ic_play_arrow_black_48dp"
+                android:tint="@android:color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/play_next_button"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/play_next_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/transparent"
+                android:src="@drawable/ic_skip_next_black_24dp"
+                android:tint="@android:color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -67,7 +67,6 @@ internal class MediaSessionCallback(
             //This ensures that the service starts and continues to run, even when all UI MediaBrowser activities that are bound to it unbind.
             startService(Intent(this, ZikkMediaService::class.java))
 
-            //TODO  Update metadata and state
             mediaSessionCompat.isActive = true
 
             trackPlayer.start()
@@ -120,10 +119,7 @@ internal class MediaSessionCallback(
 
     override fun onSkipToNext() {
         super.onSkipToNext()
-    }
-
-    override fun onSkipToPrevious() {
-        super.onSkipToPrevious()
+        //TODO Skip to next implementation
     }
 
     override fun onAudioFocusChange(focusChange: Int) {

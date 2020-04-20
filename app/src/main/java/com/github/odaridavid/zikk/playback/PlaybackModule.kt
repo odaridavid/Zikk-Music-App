@@ -55,11 +55,6 @@ internal class PlaybackModule {
     }
 
     @Provides
-    fun providesMediaControllerCompat(mediaSessionCompat: MediaSessionCompat): MediaControllerCompat {
-        return mediaSessionCompat.controller
-    }
-
-    @Provides
     fun providesTrackPlayer(): TrackPlayer {
         return TrackPlayer()
     }
@@ -67,5 +62,13 @@ internal class PlaybackModule {
     @Provides
     fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
         return BecomingNoisyReceiver(mediaControllerCompat)
+    }
+
+    @Provides
+    fun providesMediaControllerCompat(
+        context: Context,
+        mediaSessionCompat: MediaSessionCompat
+    ): MediaControllerCompat {
+        return MediaControllerCompat(context, mediaSessionCompat)
     }
 }

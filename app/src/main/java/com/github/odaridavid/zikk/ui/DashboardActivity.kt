@@ -13,75 +13,56 @@ package com.github.odaridavid.zikk.ui
  * the License.
  *
  **/
-import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Intent
-import android.media.AudioAttributes
 import android.media.AudioManager
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
+import android.widget.ProgressBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.playback.ZikkMediaService
+import com.github.odaridavid.zikk.playback.TrackPlayer
 import com.github.odaridavid.zikk.tracks.TrackRepository
 import com.github.odaridavid.zikk.tracks.TracksAdapter
-import com.github.odaridavid.zikk.utils.PermissionUtils
-import com.github.odaridavid.zikk.utils.injector
-import com.github.odaridavid.zikk.utils.showToast
-import com.github.odaridavid.zikk.utils.versionFrom
+import com.github.odaridavid.zikk.utils.*
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
  * Main screen on app launch
  */
-internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard),
-    MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
 
+    //TODO Bind Media player to service with media controls
     //TODO DI and Code Cleanup
     private lateinit var mediaBrowser: MediaBrowserCompat
-    private var mediaPlayer: MediaPlayer? = null
+
+    @Inject
+    lateinit var trackPlayer: TrackPlayer
 
     @Inject
     lateinit var tracksRepository: TrackRepository
-    private lateinit var tracksRecyclerView: RecyclerView
-    private lateinit var tracksAdapter: TracksAdapter
-    private val dashboardViewModel: DashboardViewModel by viewModels()
-    private val mediaControllerCallback = object : MediaControllerCompat.Callback() {
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            super.onPlaybackStateChanged(state)
-            state?.run {
-                dashboardViewModel.setPlaybackState(this)
-            }
-        }
 
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            super.onMetadataChanged(metadata)
-            metadata?.run {
-                dashboardViewModel.setNowPlayingMetadata(this)
-            }
-        }
+    private lateinit var tracksRecyclerView: RecyclerView
+    private lateinit var dashboardProgressBar: ProgressBar
+    private lateinit var tracksAdapter: TracksAdapter
+    private val dashboardViewModel: DashboardViewModel by viewModels {
+        DashboardViewModel.Factory(
+            tracksRepository
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.inject(this)
-        super.onCreate(savedInstanceState)
         matchStatusBarWithBackground()
+        super.onCreate(savedInstanceState)
         init()
         checkPermissionsAndInit(onPermissionNotGranted = {
             ActivityCompat.requestPermissions(
@@ -99,95 +80,30 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
 
     private fun init() {
         tracksRecyclerView = findViewById(R.id.tracks_recycler_view)
+        dashboardProgressBar = findViewById(R.id.dashboard_progress_bar)
         tracksAdapter = TracksAdapter { id ->
             val contentUri: Uri =
                 ContentUris.withAppendedId(
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
-            mediaPlayer?.reset()
-            mediaPlayer?.setDataSource(applicationContext, contentUri)
-            mediaPlayer?.prepareAsync()
+            trackPlayer.reset()
+            trackPlayer.setDataSource(applicationContext, contentUri)
+            trackPlayer.prepare()
         }
-
         tracksRecyclerView.adapter = ScaleInAnimationAdapter(tracksAdapter)
-        //TODO Bind Media player to service
-        //TODO Create media controls
-        mediaPlayer = MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            setOnPreparedListener(this@DashboardActivity)
-            setOnErrorListener(this@DashboardActivity)
-        }
+        observeTracks()
     }
 
     private inline fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {
         if (!PermissionUtils.allPermissionsGranted(this, PermissionUtils.STORAGE_PERMISSIONS))
             onPermissionNotGranted()
-        else {
-            //TODO Cleanup move logic to viewmodel and show loading state while fetching tracks
-            GlobalScope.launch(Dispatchers.IO) {
-                val tracks = tracksRepository.getAllTracks()
-                withContext(Dispatchers.Main) {
-                    tracksAdapter.submitList(tracks)
-                }
-            }
-
-            mediaBrowser = MediaBrowserCompat(
-                this,
-                ComponentName(this, ZikkMediaService::class.java),
-                object : MediaBrowserCompat.ConnectionCallback() {
-
-                    /**
-                     *  Creates the media controller, links it to the media session with a session token,
-                     *  links your UI controls to the MediaController, and registers the controller to receive
-                     *  callbacks from the media session.
-                     */
-                    override fun onConnected() {
-                        super.onConnected()
-                        Timber.i("Connection with media browser successful")
-                        mediaBrowser.sessionToken.also { token ->
-                            val mediaController =
-                                MediaControllerCompat(this@DashboardActivity, token).apply {
-                                    registerCallback(mediaControllerCallback)
-                                }
-
-                            /* Save the controller */
-                            MediaControllerCompat.setMediaController(
-                                this@DashboardActivity,
-                                mediaController
-                            )
-                        }
-                    }
-
-                    override fun onConnectionSuspended() {
-                        super.onConnectionSuspended()
-                        Timber.i("Disconnected from media browser ")
-                    }
-
-                    override fun onConnectionFailed() {
-                        super.onConnectionFailed()
-                        Timber.i("Connection with media browser failed")
-                    }
-                },
-                null
-            )
-            mediaBrowser.connect()
-        }
+        else dashboardViewModel.loadTracks()
     }
-
 
     override fun onResume() {
         super.onResume()
-        //Audio stream to change when handling hardware volume changes
         volumeControlStream = AudioManager.STREAM_MUSIC
-    }
-
-    override fun onStop() {
-        super.onStop()
-        MediaControllerCompat.getMediaController(this)?.unregisterCallback(mediaControllerCallback)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -202,20 +118,26 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaBrowser.disconnect()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        trackPlayer.release()
     }
 
-    override fun onPrepared(mediaPlayer: MediaPlayer?) {
-        Timber.i("Media Player prepared")
-        mediaPlayer?.start()
+    private fun observeTracks() {
+        dashboardViewModel.tracks.observe(this, Observer { tracks ->
+            dashboardProgressBar.hide()
+            tracksAdapter.submitList(tracks)
+        })
     }
 
-    override fun onError(mediaPlayer: MediaPlayer?, what: Int, extra: Int): Boolean {
-        Timber.d("Mediaplayer Error:$what")
-        mediaPlayer?.reset()
-        return true
+    fun observeMetadata() {
+        dashboardViewModel.nowPlaying.observe(this, Observer {
+            //TODO Update UI
+        })
+    }
+
+    fun observePlaybackState() {
+        dashboardViewModel.playbackState.observe(this, Observer {
+            //TODO Update playback state
+        })
     }
 
     companion object {

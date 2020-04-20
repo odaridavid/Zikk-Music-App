@@ -2,9 +2,11 @@ package com.github.odaridavid.zikk.ui
 
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
+import com.github.odaridavid.zikk.tracks.Track
+import com.github.odaridavid.zikk.tracks.TrackRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  *
@@ -19,7 +21,7 @@ import androidx.lifecycle.ViewModel
  * the License.
  *
  **/
-internal class DashboardViewModel : ViewModel() {
+internal class DashboardViewModel(private val trackRepository: TrackRepository) : ViewModel() {
 
     private val _nowPlaying = MutableLiveData<MediaMetadataCompat>()
     val nowPlaying: LiveData<MediaMetadataCompat>
@@ -28,6 +30,10 @@ internal class DashboardViewModel : ViewModel() {
     private val _playbackState = MutableLiveData<PlaybackStateCompat>()
     val playbackState: LiveData<PlaybackStateCompat>
         get() = _playbackState
+
+    private val _tracks = MutableLiveData<List<Track>>()
+    val tracks: LiveData<List<Track>>
+        get() = _tracks
 
     init {
         //TODO Save last played track info and load on initialisation
@@ -50,4 +56,22 @@ internal class DashboardViewModel : ViewModel() {
         _nowPlaying.value = mediaMetadataCompat
     }
 
+    fun loadTracks() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tracks = trackRepository.getAllTracks()
+            _tracks.postValue(tracks)
+        }
+    }
+
+    internal class Factory(
+        private val trackRepository: TrackRepository
+    ) : ViewModelProvider.NewInstanceFactory() {
+
+        @Suppress("unchecked_cast")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return DashboardViewModel(trackRepository) as T
+        }
+    }
+
 }
+
