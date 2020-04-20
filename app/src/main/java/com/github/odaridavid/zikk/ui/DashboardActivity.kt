@@ -14,8 +14,12 @@ package com.github.odaridavid.zikk.ui
  *
  **/
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -46,10 +50,12 @@ import javax.inject.Inject
 /**
  * Main screen on app launch
  */
-internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard) {
+internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard),
+    MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
     //TODO DI and Code Cleanup
     private lateinit var mediaBrowser: MediaBrowserCompat
+    private var mediaPlayer: MediaPlayer? = null
 
     @Inject
     lateinit var tracksRepository: TrackRepository
@@ -93,10 +99,28 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
 
     private fun init() {
         tracksRecyclerView = findViewById(R.id.tracks_recycler_view)
-        tracksAdapter = TracksAdapter { audioFile ->
-            //TODO Handle on item click
+        tracksAdapter = TracksAdapter { id ->
+            val contentUri: Uri =
+                ContentUris.withAppendedId(
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+            mediaPlayer?.reset()
+            mediaPlayer?.setDataSource(applicationContext, contentUri)
+            mediaPlayer?.prepareAsync()
         }
+
         tracksRecyclerView.adapter = ScaleInAnimationAdapter(tracksAdapter)
+        //TODO Bind Media player to service
+        //TODO Create media controls
+        mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            setOnPreparedListener(this@DashboardActivity)
+            setOnErrorListener(this@DashboardActivity)
+        }
     }
 
     private inline fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {
@@ -123,7 +147,7 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
                      */
                     override fun onConnected() {
                         super.onConnected()
-                        Timber.d("Connection with media browser success")
+                        Timber.i("Connection with media browser successful")
                         mediaBrowser.sessionToken.also { token ->
                             val mediaController =
                                 MediaControllerCompat(this@DashboardActivity, token).apply {
@@ -140,12 +164,12 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
 
                     override fun onConnectionSuspended() {
                         super.onConnectionSuspended()
-                        Timber.d("Disconnected from media browser ")
+                        Timber.i("Disconnected from media browser ")
                     }
 
                     override fun onConnectionFailed() {
                         super.onConnectionFailed()
-                        Timber.d("Connection with media browser failed")
+                        Timber.i("Connection with media browser failed")
                     }
                 },
                 null
@@ -179,9 +203,21 @@ internal class DashboardActivity : AppCompatActivity(R.layout.activity_dashboard
     override fun onDestroy() {
         super.onDestroy()
         mediaBrowser.disconnect()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 
-    //TODO Play music
+    override fun onPrepared(mediaPlayer: MediaPlayer?) {
+        Timber.i("Media Player prepared")
+        mediaPlayer?.start()
+    }
+
+    override fun onError(mediaPlayer: MediaPlayer?, what: Int, extra: Int): Boolean {
+        Timber.d("Mediaplayer Error:$what")
+        mediaPlayer?.reset()
+        return true
+    }
+
     companion object {
         private const val RQ_STORAGE_PERMISSIONS = 1000
     }
