@@ -63,7 +63,7 @@ internal class TrackProvider(val applicationContext: Context, val albumProvider:
         )
     }
 
-    fun getAlbumArt(album: String): String {
+    private fun getAlbumArt(album: String): String {
         val albums = albumProvider.loadAlbumsByQuery("album=?", arrayOf(album))
         return if (albums.isEmpty()) "" else albums[0].albumArt
     }

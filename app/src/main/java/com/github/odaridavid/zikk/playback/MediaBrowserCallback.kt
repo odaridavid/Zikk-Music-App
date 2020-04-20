@@ -13,22 +13,3 @@ package com.github.odaridavid.zikk.playback
  * the License.
  *
  **/
-import android.support.v4.media.MediaBrowserCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-
-class MediaBrowserLifecycleObserver(
-    private val mediaBrowser: MediaBrowserCompat
-) : LifecycleObserver {
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun connectMediaBrowser() {
-        mediaBrowser.connect()
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun disconnectMediaBrowser() {
-        mediaBrowser.disconnect()
-    }
-}

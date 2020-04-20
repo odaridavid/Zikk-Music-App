@@ -27,7 +27,8 @@ import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.utils.convertMillisecondsToDuration
 
 
-internal class TracksAdapter : ListAdapter<Track, TracksAdapter.TrackViewHolder>(TrackDiffUtil) {
+internal class TracksAdapter(val onClick: (Long) -> Unit) :
+    ListAdapter<Track, TracksAdapter.TrackViewHolder>(TrackDiffUtil) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
         val context = parent.context
@@ -56,6 +57,7 @@ internal class TracksAdapter : ListAdapter<Track, TracksAdapter.TrackViewHolder>
                 val trackTitle = findViewById<TextView>(R.id.track_title_text_view).apply {
                     text = track.title
                 }
+                setOnClickListener { onClick(track.id) }
             }
         }
     }
