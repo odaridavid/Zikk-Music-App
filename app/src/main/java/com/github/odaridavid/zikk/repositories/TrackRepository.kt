@@ -19,9 +19,9 @@ import com.github.odaridavid.zikk.models.Track
  * the License.
  *
  **/
-internal class TrackProvider(
+internal class TrackRepository(
     val applicationContext: Context,
-    private val albumProvider: AlbumProvider
+    private val albumRepository: AlbumRepository
 ) {
     /**
      * Returns a list of tracks after extracting from a cursor
@@ -63,7 +63,7 @@ internal class TrackProvider(
     }
 
     private fun getAlbumArt(album: String): String {
-        val albums = albumProvider.loadAlbumsByQuery("album=?", arrayOf(album))
+        val albums = albumRepository.loadAlbumsByQuery("album=?", arrayOf(album))
         return if (albums.isEmpty()) "" else albums[0].albumArt
     }
 

@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.playback
+package com.github.odaridavid.zikk.di
 
 /**
  *
@@ -18,7 +18,10 @@ import android.content.Context
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
+import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.playback.session.MediaLoader
+import com.github.odaridavid.zikk.repositories.*
 import dagger.Module
 import dagger.Provides
 
@@ -60,7 +63,9 @@ internal class PlaybackModule {
 
     @Provides
     fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
-        return BecomingNoisyReceiver(mediaControllerCompat)
+        return BecomingNoisyReceiver(
+            mediaControllerCompat
+        )
     }
 
     @Provides
@@ -69,6 +74,25 @@ internal class PlaybackModule {
         mediaSessionCompat: MediaSessionCompat
     ): MediaControllerCompat {
         return MediaControllerCompat(context, mediaSessionCompat)
+    }
+
+    @Provides
+    fun providesMediaLoader(
+        context: Context,
+        albumRepository: AlbumRepository,
+        artistRepository: ArtistRepository,
+        genreRepository: GenreRepository,
+        trackRepository: TrackRepository,
+        playlistRepository: PlaylistRepository
+    ): MediaLoader {
+        return MediaLoader(
+            context,
+            albumRepository,
+            artistRepository,
+            genreRepository,
+            trackRepository,
+            playlistRepository
+        )
     }
 
 }

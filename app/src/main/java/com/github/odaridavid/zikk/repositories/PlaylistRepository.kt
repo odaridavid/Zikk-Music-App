@@ -18,7 +18,7 @@ import android.database.Cursor
 import android.provider.MediaStore
 import com.github.odaridavid.zikk.models.Playlist
 
-internal class PlaylistProvider(val applicationContext: Context) {
+internal class PlaylistRepository(val applicationContext: Context) {
 
     /**
      * Returns a list of playlists after extracting from a cursor

@@ -1,8 +1,8 @@
 package com.github.odaridavid.zikk.di
 
 import android.content.Context
-import com.github.odaridavid.zikk.repositories.AlbumProvider
-import com.github.odaridavid.zikk.repositories.TrackProvider
+import com.github.odaridavid.zikk.repositories.AlbumRepository
+import com.github.odaridavid.zikk.repositories.TrackRepository
 import dagger.Module
 import dagger.Provides
 
@@ -23,10 +23,10 @@ import dagger.Provides
 internal class TrackModule {
 
     @Provides
-    fun providesTrackProvider(context: Context, albumProvider: AlbumProvider): TrackProvider {
-        return TrackProvider(
+    fun providesTrackProvider(context: Context, albumRepository: AlbumRepository): TrackRepository {
+        return TrackRepository(
             context,
-            albumProvider
+            albumRepository
         )
     }
 

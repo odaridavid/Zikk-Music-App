@@ -19,7 +19,7 @@ import android.provider.MediaStore
 import com.github.odaridavid.zikk.models.Artist
 
 
-internal class ArtistProvider(val applicationContext: Context) {
+internal class ArtistRepository(val applicationContext: Context) {
 
     /**
      * Returns a list of artists after extracting from a cursor

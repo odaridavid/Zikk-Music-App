@@ -14,7 +14,7 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.repositories.PlaylistProvider
+import com.github.odaridavid.zikk.repositories.PlaylistRepository
 import dagger.Module
 import dagger.Provides
 
@@ -23,8 +23,8 @@ import dagger.Provides
 internal class PlaylistModule {
 
     @Provides
-    fun providesPlaylistProvider(applicationContext: Context): PlaylistProvider {
-        return PlaylistProvider(
+    fun providesPlaylistProvider(applicationContext: Context): PlaylistRepository {
+        return PlaylistRepository(
             applicationContext
         )
     }

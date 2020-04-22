@@ -14,7 +14,7 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.repositories.AlbumProvider
+import com.github.odaridavid.zikk.repositories.AlbumRepository
 import dagger.Module
 import dagger.Provides
 
@@ -25,8 +25,8 @@ import dagger.Provides
 internal class AlbumModule {
 
     @Provides
-    fun providesAlbumProvider(applicationContext: Context): AlbumProvider {
-        return AlbumProvider(
+    fun providesAlbumProvider(applicationContext: Context): AlbumRepository {
+        return AlbumRepository(
             applicationContext
         )
     }

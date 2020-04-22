@@ -14,7 +14,7 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.repositories.GenreProvider
+import com.github.odaridavid.zikk.repositories.GenreRepository
 import dagger.Module
 import dagger.Provides
 
@@ -22,8 +22,8 @@ import dagger.Provides
 internal class GenreModule {
 
     @Provides
-    fun providesGenreProvider(applicationContext: Context): GenreProvider {
-        return GenreProvider(
+    fun providesGenreProvider(applicationContext: Context): GenreRepository {
+        return GenreRepository(
             applicationContext
         )
     }

@@ -19,7 +19,7 @@ import android.provider.MediaStore
 import com.github.odaridavid.zikk.models.Genre
 
 
-internal class GenreProvider(val applicationContext: Context) {
+internal class GenreRepository(val applicationContext: Context) {
 
     /**
      * Returns a list of genres after extracting from a cursor

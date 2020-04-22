@@ -14,7 +14,6 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.playback.PlaybackModule
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.ui.DashboardActivity
 import dagger.BindsInstance

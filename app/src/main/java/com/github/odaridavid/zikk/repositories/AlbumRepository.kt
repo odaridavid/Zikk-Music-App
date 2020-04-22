@@ -20,7 +20,7 @@ import android.provider.MediaStore
 import com.github.odaridavid.zikk.models.Album
 
 
-internal class AlbumProvider(private val applicationContext: Context) {
+internal class AlbumRepository(private val applicationContext: Context) {
 
     /**
      * Returns a list of albums after extracting from a cursor

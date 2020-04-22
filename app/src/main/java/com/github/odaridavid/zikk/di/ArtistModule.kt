@@ -14,7 +14,7 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.repositories.ArtistProvider
+import com.github.odaridavid.zikk.repositories.ArtistRepository
 import dagger.Module
 import dagger.Provides
 
@@ -23,8 +23,8 @@ import dagger.Provides
 internal class ArtistModule {
 
     @Provides
-    fun providesArtistsProvider(applicationContext: Context): ArtistProvider {
-        return ArtistProvider(
+    fun providesArtistsProvider(applicationContext: Context): ArtistRepository {
+        return ArtistRepository(
             applicationContext
         )
     }
