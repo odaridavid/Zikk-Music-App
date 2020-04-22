@@ -41,7 +41,6 @@ internal class TrackProvider(
         val artistId = getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
         val artistName = getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
         val albumName = getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-        val albumId = getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
         val title = getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
         val displayName = getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
         val track = getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
@@ -51,7 +50,6 @@ internal class TrackProvider(
         val albumArt = getAlbumArt(getString(albumName))
         return Track(
             id = getLong(trackId),
-            albumId = getLong(albumId),
             artistId = getLong(artistId),
             artist = getString(artistName),
             album = getString(albumName),

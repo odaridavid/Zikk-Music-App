@@ -20,18 +20,17 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.repositories.AlbumProvider
-import com.github.odaridavid.zikk.repositories.ArtistProvider
-import com.github.odaridavid.zikk.repositories.GenreProvider
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
-import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.MediaCategoryInfo
+import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
-import com.github.odaridavid.zikk.repositories.PlaylistProvider
-import com.github.odaridavid.zikk.repositories.TrackProvider
+import com.github.odaridavid.zikk.repositories.*
 import com.github.odaridavid.zikk.utils.createMediaItemsCategories
 import com.github.odaridavid.zikk.utils.generateMediaItem
 import com.github.odaridavid.zikk.utils.injector
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -115,14 +114,18 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
         if (MEDIA_ROOT_ID == parentId) {
             //if this is the root menu build the MediaItem objects for the top level as browsable roots
             buildMediaCategories(mediaItems)
+            result.sendResult(mediaItems)
         } else {
 
             result.detach()
-            //TODO Create coroutine scope and launch work in scope
-            val mediaItemId = MediaId.values().find { id -> id.toString() == parentId }
-            getChildren(mediaItems, mediaItemId)
+            //TODO Create coroutine scope that is cancelable and launch work in scope
+            GlobalScope.launch(Dispatchers.IO) {
+                val mediaItemId = MediaId.values().find { id -> id.toString() == parentId }
+                getChildren(mediaItems, mediaItemId)
+                result.sendResult(mediaItems)
+            }
         }
-        result.sendResult(mediaItems)
+
     }
 
     // Examine the passed parentId to see which submenu we're at,and put the children of that menu in the mediaItems list

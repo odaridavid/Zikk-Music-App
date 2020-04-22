@@ -1,4 +1,5 @@
 package com.github.odaridavid.zikk.ui
+
 /**
  *
  * Copyright 2020 David Odari
@@ -14,13 +15,11 @@ package com.github.odaridavid.zikk.ui
  **/
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.lifecycle.*
-import com.github.odaridavid.zikk.models.Track
-import com.github.odaridavid.zikk.repositories.TrackProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 
-internal class DashboardViewModel(private val trackProvider: TrackProvider) : ViewModel() {
+internal class DashboardViewModel : ViewModel() {
 
     private val _nowPlaying = MutableLiveData<MediaMetadataCompat>()
     val nowPlaying: LiveData<MediaMetadataCompat>
@@ -30,9 +29,9 @@ internal class DashboardViewModel(private val trackProvider: TrackProvider) : Vi
     val playbackState: LiveData<PlaybackStateCompat>
         get() = _playbackState
 
-    private val _tracks = MutableLiveData<List<Track>>()
-    val tracks: LiveData<List<Track>>
-        get() = _tracks
+    private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
+    val isMediaBrowserConnected: LiveData<Boolean>
+        get() = _isMediaBrowserConnected
 
     init {
         //TODO Save last played track info and load on initialisation
@@ -55,21 +54,8 @@ internal class DashboardViewModel(private val trackProvider: TrackProvider) : Vi
         _nowPlaying.value = mediaMetadataCompat
     }
 
-    fun loadTracks() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val tracks = trackProvider.loadAllTracks()
-            _tracks.postValue(tracks)
-        }
-    }
-
-    internal class Factory(
-        private val trackProvider: TrackProvider
-    ) : ViewModelProvider.NewInstanceFactory() {
-
-        @Suppress("unchecked_cast")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return DashboardViewModel(trackProvider) as T
-        }
+    fun setIsConnected(value: Boolean) {
+        _isMediaBrowserConnected.value = value
     }
 
 }

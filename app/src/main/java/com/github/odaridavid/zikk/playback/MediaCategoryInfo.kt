@@ -15,7 +15,9 @@ package com.github.odaridavid.zikk.playback
  **/
 import androidx.annotation.StringRes
 
-
+/**
+ * Todo Set icon uri
+ */
 data class MediaCategoryInfo(
     @StringRes val title: Int,
     val id: MediaId,

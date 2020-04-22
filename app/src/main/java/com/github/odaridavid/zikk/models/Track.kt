@@ -16,7 +16,6 @@ package com.github.odaridavid.zikk.models
 internal data class Track(
     val id: Long,
     val artistId: Long,
-    val albumId: Long,
     val title: String,
     val album: String,
     val artist: String,

@@ -19,13 +19,17 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.widget.ProgressBar
+import androidx.activity.viewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
-import com.github.odaridavid.zikk.playback.controller.MediaBrowserSubscriptionCallback
+import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.controller.MediaControllerCompatCallback
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
+import com.github.odaridavid.zikk.utils.hide
 import com.github.odaridavid.zikk.utils.injector
+import com.github.odaridavid.zikk.utils.mediaControllerCompat
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
 import timber.log.Timber
 
@@ -38,30 +42,43 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
     //TODO DI and Code Cleanup
     private var mediaBrowser: MediaBrowserCompat? = null
     private var mediaControllerCompatCallback = MediaControllerCompatCallback()
-    private var mediaBrowserSubscriptionCallback = MediaBrowserSubscriptionCallback()
 
     private lateinit var mediaItemRecyclerView: RecyclerView
     private lateinit var dashboardProgressBar: ProgressBar
     private lateinit var mediaItemAdapter: MediaItemAdapter
+    private val dashboardViewModel: DashboardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.inject(this)
         super.onCreate(savedInstanceState)
-        init()
+        initViews()
+        initMediaBrowser()
     }
 
-    private fun init() {
+    override fun onStart() {
+        super.onStart()
+        mediaBrowser?.connect()
+        observeMediaBrowserConnection()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        volumeControlStream = AudioManager.STREAM_MUSIC
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
+        mediaBrowser?.disconnect()
+    }
+
+    private fun initViews() {
         mediaItemRecyclerView = findViewById(R.id.tracks_recycler_view)
         dashboardProgressBar = findViewById(R.id.dashboard_progress_bar)
         mediaItemAdapter = MediaItemAdapter { id ->
             //TODO Browse content with media browser service
         }
         mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        initMediaBrowser()
     }
 
     private fun initMediaBrowser() {
@@ -74,6 +91,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                 override fun onConnected() {
                     super.onConnected()
                     Timber.i("Connection with media browser successful")
+                    dashboardViewModel.setIsConnected(true)
                     mediaBrowser?.run {
                         val mediaControllerCompat =
                             MediaControllerCompat(this@DashboardActivity, sessionToken)
@@ -85,28 +103,47 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
                         mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
 
-                        //After the client connects, it can traverse the content hierarchy by making repeated calls to MediaBrowserCompat.subscribe() to build a local representation of the UI
-                        subscribe(root, mediaBrowserSubscriptionCallback)
                     }
                 }
 
                 override fun onConnectionSuspended() {
                     super.onConnectionSuspended()
+                    dashboardViewModel.setIsConnected(false)
                     Timber.i("Disconnected from media browser ")
-                    mediaBrowser?.run { unsubscribe(root) }
                 }
 
                 override fun onConnectionFailed() {
                     super.onConnectionFailed()
+                    dashboardViewModel.setIsConnected(false)
                     Timber.i("Connection with media browser failed")
                 }
             }, null)
     }
 
-    override fun onResume() {
-        super.onResume()
-        volumeControlStream = AudioManager.STREAM_MUSIC
+    private fun observeMediaBrowserConnection() {
+        //After the client connects, it can traverse the content hierarchy by making repeated calls
+        //to MediaBrowserCompat.subscribe() to build a local representation of the UI
+        dashboardViewModel.isMediaBrowserConnected.observe(this, Observer { isConnected ->
+            if (!isConnected) mediaBrowser?.run { unsubscribe(root) }
+            else mediaBrowser?.subscribe(
+                MediaId.TRACK.toString(),
+                object : MediaBrowserCompat.SubscriptionCallback() {
+
+                    override fun onChildrenLoaded(
+                        parentId: String,
+                        children: MutableList<MediaBrowserCompat.MediaItem>
+                    ) {
+                        super.onChildrenLoaded(parentId, children)
+                        Timber.d("$parentId Loaded with ${children.count()} items")
+                        dashboardProgressBar.hide()
+                        mediaItemAdapter.submitList(children)
+                    }
+
+                    override fun onError(parentId: String) {
+                        super.onError(parentId)
+                        Timber.d("Error on $parentId")
+                    }
+                })
+        })
     }
-
-
 }
