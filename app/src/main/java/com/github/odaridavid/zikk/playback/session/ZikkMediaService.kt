@@ -15,6 +15,7 @@ package com.github.odaridavid.zikk.playback.session
  **/
 import android.app.PendingIntent
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -25,8 +26,8 @@ import com.github.odaridavid.zikk.playback.MediaCategoryInfo
 import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.repositories.*
-import com.github.odaridavid.zikk.utils.createMediaItemsCategories
-import com.github.odaridavid.zikk.utils.generateMediaItem
+import com.github.odaridavid.zikk.utils.createMediaItem
+import com.github.odaridavid.zikk.utils.getDrawableUri
 import com.github.odaridavid.zikk.utils.injector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -90,7 +91,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                 becomingNoisyReceiver
             )
         )
-        //TODO Set track player data source
+        //TODO Set track player data source to play
         // trackPlayer.setDataSource(applicationContext, contentUri)
 
     }
@@ -139,13 +140,14 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                     val albums = albumProvider.loadAllAlbums()
                     albums.forEach { album ->
                         mediaItems.add(
-                            generateMediaItem(
+                            createMediaItem(
                                 album.title,
                                 resources.getQuantityString(
                                     R.plurals.number_of_songs,
                                     album.noOfSongs
                                 ),
                                 "${MediaId.ALBUM}${album.id}",
+                                null,
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -155,12 +157,13 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                     val artists = artistProvider.loadAllArtists()
                     artists.forEach { artist ->
                         mediaItems.add(
-                            generateMediaItem(
+                            createMediaItem(
                                 artist.name,
                                 resources.getQuantityString(
                                     R.plurals.number_of_albums,
                                     artist.noOfAlbums
                                 ), "${MediaId.ARTIST}${artist.id}",
+                                null,
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -170,13 +173,13 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                     val genres = genreProvider.loadAllGenres()
                     genres.forEach { genre ->
                         mediaItems.add(
-                            generateMediaItem(
+                            createMediaItem(
                                 genre.name,
                                 resources.getQuantityString(
                                     R.plurals.number_of_songs,
                                     genre.noOfTracks
                                 ),
-                                "${MediaId.GENRE}${genre.id}",
+                                "${MediaId.GENRE}${genre.id}", null,
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -187,13 +190,14 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                     val playlists = playlistProvider.loadAllPlaylists()
                     playlists.forEach { playlist ->
                         mediaItems.add(
-                            generateMediaItem(
+                            createMediaItem(
                                 playlist.name,
                                 resources.getQuantityString(
                                     R.plurals.number_of_songs,
                                     playlist.noOfTracks
                                 ),
                                 "${MediaId.PLAYLIST}${playlist.id}",
+                                null,
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -204,10 +208,11 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                     val tracks = trackProvider.loadAllTracks()
                     tracks.forEach { track ->
                         mediaItems.add(
-                            generateMediaItem(
+                            createMediaItem(
                                 track.title,
                                 track.artist,
                                 "${MediaId.TRACK}${track.id}",
+                                Uri.parse(track.albumArt),
                                 MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
                             )
                         )
@@ -239,36 +244,42 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                 MediaCategoryInfo(
                     R.string.title_tracks,
                     MediaId.TRACK,
-                    R.string.title_tracks
+                    R.string.title_tracks,
+                    getDrawableUri(this,"ic_tracks_black_24dp")
                 ),
                 MediaCategoryInfo(
                     R.string.title_albums,
                     MediaId.ALBUM,
-                    R.string.title_albums
+                    R.string.title_albums,
+                    getDrawableUri(this,"ic_album_black_24dp")
                 ),
                 MediaCategoryInfo(
                     R.string.title_artists,
                     MediaId.ARTIST,
-                    R.string.title_artists
+                    R.string.title_artists,
+                    getDrawableUri(this,"ic_artist_black_24dp")
                 ),
                 MediaCategoryInfo(
                     R.string.title_playlists,
                     MediaId.PLAYLIST,
-                    R.string.title_playlists
+                    R.string.title_playlists,
+                    getDrawableUri(this,"ic_playlist_black_24dp")
                 ),
                 MediaCategoryInfo(
                     R.string.title_genres,
                     MediaId.GENRE,
-                    R.string.title_genres
+                    R.string.title_genres,
+                    getDrawableUri(this,"ic_genres_black_24dp")
                 )
             )
 
         for (mediaCategoryInfo in mediaCategoriesInfo) {
             mediaItems.add(
-                createMediaItemsCategories(
+                createMediaItem(
                     this,
                     mediaCategoryInfo.title,
                     mediaCategoryInfo.subtitle,
+                    mediaCategoryInfo.iconUri,
                     mediaCategoryInfo.id
                 )
             )

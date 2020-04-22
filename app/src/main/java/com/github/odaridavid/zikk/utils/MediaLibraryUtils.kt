@@ -14,15 +14,17 @@ package com.github.odaridavid.zikk.utils
  *
  **/
 import android.content.Context
+import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import androidx.annotation.StringRes
 import com.github.odaridavid.zikk.playback.MediaId
 
-fun createMediaItemsCategories(
+fun createMediaItem(
     context: Context,
     @StringRes title: Int,
     @StringRes subtitle: Int,
+    iconUri: Uri? = null,
     mediaId: MediaId
 ): MediaBrowserCompat.MediaItem {
     return MediaBrowserCompat.MediaItem(
@@ -30,16 +32,17 @@ fun createMediaItemsCategories(
             .setMediaId(mediaId.toString())
             .setTitle(context.getString(title))
             .setSubtitle(context.getString(subtitle))
+            .setIconUri(iconUri)
             .build(),
         MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
     )
 }
 
-//TODO Check on .setIconUri()
-fun generateMediaItem(
+fun createMediaItem(
     title: String,
     subtitle: String,
     mediaItemId: String,
+    iconUri: Uri?,
     @MediaBrowserCompat.MediaItem.Flags mediaItemFlags: Int
 ): MediaBrowserCompat.MediaItem {
     return MediaBrowserCompat.MediaItem(
@@ -47,8 +50,13 @@ fun generateMediaItem(
             .setMediaId(mediaItemId)
             .setTitle(title)
             .setSubtitle(subtitle)
+            .setIconUri(iconUri)
             .build(),
         mediaItemFlags
     )
+}
 
+fun getDrawableUri(context: Context, drawableName: String): Uri {
+    val appPackageName = context.packageName
+    return Uri.parse("android.resource://$appPackageName/drawable/$drawableName")
 }

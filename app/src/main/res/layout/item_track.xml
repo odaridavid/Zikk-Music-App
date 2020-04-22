@@ -28,7 +28,7 @@
         android:layout_height="match_parent">
 
         <ImageView
-            android:id="@+id/song_art_image_view"
+            android:id="@+id/track_art_image_view"
             android:layout_width="@dimen/song_art_width"
             android:scaleType="fitXY"
             android:layout_height="@dimen/song_art_height"
@@ -48,26 +48,26 @@
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textStyle="bold"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/song_duration_text_view"
-            app:layout_constraintStart_toEndOf="@id/song_art_image_view"
+            app:layout_constraintEnd_toStartOf="@+id/track_duration_text_view"
+            app:layout_constraintStart_toEndOf="@id/track_art_image_view"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Lifes Good Man" />
 
         <TextView
-            android:id="@+id/song_artist_text_view"
+            android:id="@+id/track_artist_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/small_margin"
             android:ellipsize="end"
             android:maxLines="1"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/song_duration_text_view"
-            app:layout_constraintStart_toEndOf="@id/song_art_image_view"
+            app:layout_constraintEnd_toStartOf="@+id/track_duration_text_view"
+            app:layout_constraintStart_toEndOf="@id/track_art_image_view"
             app:layout_constraintTop_toBottomOf="@id/track_title_text_view"
             tools:text="The Cow" />
 
         <TextView
-            android:id="@+id/song_duration_text_view"
+            android:id="@+id/track_duration_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/small_margin"

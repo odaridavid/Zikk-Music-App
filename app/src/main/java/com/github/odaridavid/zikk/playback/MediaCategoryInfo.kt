@@ -13,6 +13,7 @@ package com.github.odaridavid.zikk.playback
  * the License.
  *
  **/
+import android.net.Uri
 import androidx.annotation.StringRes
 
 /**
@@ -21,5 +22,6 @@ import androidx.annotation.StringRes
 data class MediaCategoryInfo(
     @StringRes val title: Int,
     val id: MediaId,
-    @StringRes val subtitle: Int
+    @StringRes val subtitle: Int,
+    val iconUri: Uri
 )

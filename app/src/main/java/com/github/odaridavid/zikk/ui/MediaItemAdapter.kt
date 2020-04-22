@@ -33,7 +33,7 @@ internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
         val context = parent.context
-        val view = LayoutInflater.from(context).inflate(R.layout.item_song, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.item_track, parent, false)
         return TrackViewHolder(view)
     }
 
@@ -45,13 +45,16 @@ internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
         fun bind(mediaItem: MediaBrowserCompat.MediaItem) {
             with(view) {
                 //TODO Create separate layout for this adapter
-                val trackAlbumArt = findViewById<ImageView>(R.id.song_art_image_view).apply {
+                findViewById<ImageView>(R.id.track_art_image_view).apply {
                     this.load(mediaItem.description.iconUri)
                     contentDescription = "${mediaItem.description.title} Album Art"
 
                 }
-                val trackTitle = findViewById<TextView>(R.id.track_title_text_view).apply {
+                findViewById<TextView>(R.id.track_title_text_view).apply {
                     text = mediaItem.description.title
+                }
+                findViewById<TextView>(R.id.track_artist_text_view).apply {
+                    text = mediaItem.description.subtitle
                 }
                 setOnClickListener { onClick(mediaItem.description.mediaId) }
             }
