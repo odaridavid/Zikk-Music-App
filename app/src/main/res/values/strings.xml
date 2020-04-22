@@ -29,4 +29,18 @@
 
     <!--Playback Action-->
     <string name="playback_action_pause">Pause</string>
+    <string name="playback_action_play">Play</string>
+    <string name="playback_action_stop">Stop</string>
+    <string name="playback_action_skip_to_next">Skip</string>
+
+    <!--Categories root subtitles -->
+    <string name="subtitle_all_tracks">All Tracks</string>
+    <string name="subtitle_all_albums">All Albums</string>
+    <string name="subtitle_all_artists">All Artists</string>
+    <string name="subtitle_all_playlists">All Playlists</string>
+    <string name="subtitle_all_genres">All Genres</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

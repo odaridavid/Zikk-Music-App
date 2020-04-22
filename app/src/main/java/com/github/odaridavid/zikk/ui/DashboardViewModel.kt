@@ -1,11 +1,5 @@
 package com.github.odaridavid.zikk.ui
 
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.PlaybackStateCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-
 /**
  *
  * Copyright 2020 David Odari
@@ -19,6 +13,12 @@ import androidx.lifecycle.ViewModel
  * the License.
  *
  **/
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+
 internal class DashboardViewModel : ViewModel() {
 
     private val _nowPlaying = MutableLiveData<MediaMetadataCompat>()
@@ -28,6 +28,10 @@ internal class DashboardViewModel : ViewModel() {
     private val _playbackState = MutableLiveData<PlaybackStateCompat>()
     val playbackState: LiveData<PlaybackStateCompat>
         get() = _playbackState
+
+    private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
+    val isMediaBrowserConnected: LiveData<Boolean>
+        get() = _isMediaBrowserConnected
 
     init {
         //TODO Save last played track info and load on initialisation
@@ -50,4 +54,9 @@ internal class DashboardViewModel : ViewModel() {
         _nowPlaying.value = mediaMetadataCompat
     }
 
+    fun setIsConnected(value: Boolean) {
+        _isMediaBrowserConnected.value = value
+    }
+
 }
+
