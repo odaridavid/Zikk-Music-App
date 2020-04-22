@@ -35,11 +35,13 @@ import timber.log.Timber
 
 /**
  * Main screen on app launch
+ *
  */
 internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
     //TODO Control player through media controller and display current state
     //TODO DI and Code Cleanup
+    //TODO Handle different media items in their respective fragments
     private var mediaBrowser: MediaBrowserCompat? = null
     private var mediaControllerCompatCallback = MediaControllerCompatCallback()
 

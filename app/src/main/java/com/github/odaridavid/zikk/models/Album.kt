@@ -13,7 +13,7 @@ package com.github.odaridavid.zikk.models
  * the License.
  *
  **/
-data class Album(
+internal data class Album(
     val id: Long,
     val title: String,
     val artist: String,
