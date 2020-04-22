@@ -17,7 +17,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.PlaybackStateCompat.*
+import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
 import dagger.Module
 import dagger.Provides
 
@@ -26,17 +27,20 @@ internal class PlaybackModule {
 
     @Provides
     fun providesMediaSessionCompat(
-        context: Context,
-        playbackState: PlaybackStateCompat
+        context: Context
     ): MediaSessionCompat {
         return MediaSessionCompat(context, "Zikk Media Service").apply {
-            setPlaybackState(playbackState)
-        }
-    }
 
-    @Provides
-    fun providesPlaybackState(): PlaybackStateCompat {
-        return PlaybackStateBuilder.instance
+            setPlaybackState(
+                Builder()
+                    .setActions(
+                        ACTION_PLAY or ACTION_PLAY_PAUSE or ACTION_PAUSE or ACTION_STOP or ACTION_SKIP_TO_NEXT
+                    )
+                    .build()
+            )
+            //TODO Set media session metadata
+            //setMetadata()
+        }
     }
 
     @Provides
@@ -55,11 +59,6 @@ internal class PlaybackModule {
     }
 
     @Provides
-    fun providesTrackPlayer(): TrackPlayer {
-        return TrackPlayer()
-    }
-
-    @Provides
     fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
         return BecomingNoisyReceiver(mediaControllerCompat)
     }
@@ -71,4 +70,5 @@ internal class PlaybackModule {
     ): MediaControllerCompat {
         return MediaControllerCompat(context, mediaSessionCompat)
     }
+
 }

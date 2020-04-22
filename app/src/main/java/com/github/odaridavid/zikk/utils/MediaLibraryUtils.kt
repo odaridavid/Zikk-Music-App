@@ -17,17 +17,17 @@ import android.content.Context
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import androidx.annotation.StringRes
-import com.github.odaridavid.zikk.playback.MediaItemId
+import com.github.odaridavid.zikk.playback.MediaId
 
-fun createMediaItemsRootCategories(
+fun createMediaItemsCategories(
     context: Context,
     @StringRes title: Int,
     @StringRes subtitle: Int,
-    mediaItemId: MediaItemId
+    mediaId: MediaId
 ): MediaBrowserCompat.MediaItem {
     return MediaBrowserCompat.MediaItem(
         MediaDescriptionCompat.Builder()
-            .setMediaId(mediaItemId.toString())
+            .setMediaId(mediaId.toString())
             .setTitle(context.getString(title))
             .setSubtitle(context.getString(subtitle))
             .build(),

@@ -14,13 +14,8 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import com.github.odaridavid.zikk.albums.AlbumModule
-import com.github.odaridavid.zikk.artists.ArtistModule
-import com.github.odaridavid.zikk.genres.GenreModule
 import com.github.odaridavid.zikk.playback.PlaybackModule
-import com.github.odaridavid.zikk.playback.ZikkMediaService
-import com.github.odaridavid.zikk.playlists.PlaylistModule
-import com.github.odaridavid.zikk.tracks.TrackModule
+import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.ui.DashboardActivity
 import dagger.BindsInstance
 import dagger.Component
