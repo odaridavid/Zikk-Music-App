@@ -14,14 +14,14 @@ package com.github.odaridavid.zikk.playback
  *
  **/
 import android.net.Uri
-import androidx.annotation.StringRes
+import android.support.v4.media.MediaBrowserCompat
 
-/**
- * Todo Set icon uri
- */
+
 data class MediaCategoryInfo(
-    @StringRes val title: Int,
     val id: MediaId,
-    @StringRes val subtitle: Int,
-    val iconUri: Uri
+    val title: String,
+    val subtitle: String,
+    val iconUri: Uri,
+    val description: String,
+    @MediaBrowserCompat.MediaItem.Flags val mediaFlags: Int
 )

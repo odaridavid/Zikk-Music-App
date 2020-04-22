@@ -17,32 +17,13 @@ import android.content.Context
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
-import androidx.annotation.StringRes
-import com.github.odaridavid.zikk.playback.MediaId
-
-fun createMediaItem(
-    context: Context,
-    @StringRes title: Int,
-    @StringRes subtitle: Int,
-    iconUri: Uri? = null,
-    mediaId: MediaId
-): MediaBrowserCompat.MediaItem {
-    return MediaBrowserCompat.MediaItem(
-        MediaDescriptionCompat.Builder()
-            .setMediaId(mediaId.toString())
-            .setTitle(context.getString(title))
-            .setSubtitle(context.getString(subtitle))
-            .setIconUri(iconUri)
-            .build(),
-        MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-    )
-}
 
 fun createMediaItem(
     title: String,
     subtitle: String,
     mediaItemId: String,
     iconUri: Uri?,
+    description: String,
     @MediaBrowserCompat.MediaItem.Flags mediaItemFlags: Int
 ): MediaBrowserCompat.MediaItem {
     return MediaBrowserCompat.MediaItem(
@@ -51,6 +32,8 @@ fun createMediaItem(
             .setTitle(title)
             .setSubtitle(subtitle)
             .setIconUri(iconUri)
+            .setMediaUri(null)
+            .setDescription(description)
             .build(),
         mediaItemFlags
     )

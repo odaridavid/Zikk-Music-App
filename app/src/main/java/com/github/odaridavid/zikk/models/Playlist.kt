@@ -16,6 +16,5 @@ package com.github.odaridavid.zikk.models
 internal data class Playlist(
     val id: Long,
     val name: String,
-    val noOfTracks: Int,
     val modified: String
 )

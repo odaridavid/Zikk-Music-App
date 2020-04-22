@@ -38,12 +38,10 @@ internal class PlaylistProvider(val applicationContext: Context) {
         val playlistName = getColumnIndexOrThrow(MediaStore.Audio.Playlists.NAME)
         val playlistLastModifiedDate =
             getColumnIndexOrThrow(MediaStore.Audio.Playlists.DATE_MODIFIED)
-        val noOfTracks = getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members._COUNT)
         return Playlist(
             id = getLong(playlistId),
             name = getString(playlistName),
-            modified = getString(playlistLastModifiedDate),
-            noOfTracks = getInt(noOfTracks)
+            modified = getString(playlistLastModifiedDate)
         )
     }
 
@@ -59,8 +57,7 @@ internal class PlaylistProvider(val applicationContext: Context) {
         return arrayOf(
             MediaStore.Audio.Playlists._ID,
             MediaStore.Audio.Playlists.NAME,
-            MediaStore.Audio.Playlists.DATE_MODIFIED,
-            MediaStore.Audio.Playlists.Members._COUNT
+            MediaStore.Audio.Playlists.DATE_MODIFIED
         )
     }
 }

@@ -44,7 +44,6 @@ internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
 
         fun bind(mediaItem: MediaBrowserCompat.MediaItem) {
             with(view) {
-                //TODO Create separate layout for this adapter
                 findViewById<ImageView>(R.id.track_art_image_view).apply {
                     this.load(mediaItem.description.iconUri)
                     contentDescription = "${mediaItem.description.title} Album Art"

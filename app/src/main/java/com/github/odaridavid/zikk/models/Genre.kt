@@ -13,4 +13,4 @@ package com.github.odaridavid.zikk.models
  * the License.
  *
  **/
-internal data class Genre(val id: Long, val name: String, val noOfTracks: Int)
+internal data class Genre(val id: Long, val name: String)

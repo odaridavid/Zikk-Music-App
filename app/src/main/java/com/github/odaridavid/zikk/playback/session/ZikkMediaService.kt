@@ -26,6 +26,7 @@ import com.github.odaridavid.zikk.playback.MediaCategoryInfo
 import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.repositories.*
+import com.github.odaridavid.zikk.utils.convertMillisecondsToDuration
 import com.github.odaridavid.zikk.utils.createMediaItem
 import com.github.odaridavid.zikk.utils.getDrawableUri
 import com.github.odaridavid.zikk.utils.injector
@@ -126,7 +127,6 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                 result.sendResult(mediaItems)
             }
         }
-
     }
 
     // Examine the passed parentId to see which submenu we're at,and put the children of that menu in the mediaItems list
@@ -144,10 +144,12 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                                 album.title,
                                 resources.getQuantityString(
                                     R.plurals.number_of_songs,
+                                    album.noOfSongs,
                                     album.noOfSongs
                                 ),
                                 "${MediaId.ALBUM}${album.id}",
                                 null,
+                                "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -161,9 +163,12 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                                 artist.name,
                                 resources.getQuantityString(
                                     R.plurals.number_of_albums,
+                                    artist.noOfAlbums,
                                     artist.noOfAlbums
-                                ), "${MediaId.ARTIST}${artist.id}",
+                                ),
+                                "${MediaId.ARTIST}${artist.id}",
                                 null,
+                                "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -175,11 +180,10 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                         mediaItems.add(
                             createMediaItem(
                                 genre.name,
-                                resources.getQuantityString(
-                                    R.plurals.number_of_songs,
-                                    genre.noOfTracks
-                                ),
-                                "${MediaId.GENRE}${genre.id}", null,
+                                "",
+                                "${MediaId.GENRE}${genre.id}",
+                                null,
+                                "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
@@ -192,16 +196,13 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                         mediaItems.add(
                             createMediaItem(
                                 playlist.name,
-                                resources.getQuantityString(
-                                    R.plurals.number_of_songs,
-                                    playlist.noOfTracks
-                                ),
+                                playlist.modified,
                                 "${MediaId.PLAYLIST}${playlist.id}",
                                 null,
+                                "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                             )
                         )
-
                     }
                 }
                 MediaId.TRACK -> {
@@ -213,6 +214,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                                 track.artist,
                                 "${MediaId.TRACK}${track.id}",
                                 Uri.parse(track.albumArt),
+                                convertMillisecondsToDuration(track.duration.toLong()),
                                 MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
                             )
                         )
@@ -242,45 +244,56 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
         val mediaCategoriesInfo =
             mutableListOf(
                 MediaCategoryInfo(
-                    R.string.title_tracks,
                     MediaId.TRACK,
-                    R.string.title_tracks,
-                    getDrawableUri(this,"ic_tracks_black_24dp")
+                    getString(R.string.title_tracks),
+                    getString(R.string.subtitle_all_tracks),
+                    getDrawableUri(this, "ic_tracks_black_24dp"),
+                    "",
+                    MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
                 ),
                 MediaCategoryInfo(
-                    R.string.title_albums,
                     MediaId.ALBUM,
-                    R.string.title_albums,
-                    getDrawableUri(this,"ic_album_black_24dp")
+                    getString(R.string.title_albums),
+                    getString(R.string.subtitle_all_albums),
+                    getDrawableUri(this, "ic_album_black_24dp"),
+                    "",
+                    MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                 ),
                 MediaCategoryInfo(
-                    R.string.title_artists,
                     MediaId.ARTIST,
-                    R.string.title_artists,
-                    getDrawableUri(this,"ic_artist_black_24dp")
+                    getString(R.string.title_artists),
+                    getString(R.string.subtitle_all_artists),
+                    getDrawableUri(this, "ic_artist_black_24dp"),
+                    "",
+                    MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                 ),
                 MediaCategoryInfo(
-                    R.string.title_playlists,
                     MediaId.PLAYLIST,
-                    R.string.title_playlists,
-                    getDrawableUri(this,"ic_playlist_black_24dp")
+                    getString(R.string.title_playlists),
+                    getString(R.string.subtitle_all_playlists),
+                    getDrawableUri(this, "ic_playlist_black_24dp"),
+                    "",
+                    MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                 ),
                 MediaCategoryInfo(
-                    R.string.title_genres,
                     MediaId.GENRE,
-                    R.string.title_genres,
-                    getDrawableUri(this,"ic_genres_black_24dp")
+                    getString(R.string.title_genres),
+                    getString(R.string.subtitle_all_genres),
+                    getDrawableUri(this, "ic_genres_black_24dp"),
+                    "",
+                    MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
                 )
             )
 
         for (mediaCategoryInfo in mediaCategoriesInfo) {
             mediaItems.add(
                 createMediaItem(
-                    this,
                     mediaCategoryInfo.title,
                     mediaCategoryInfo.subtitle,
+                    mediaCategoryInfo.id.toString(),
                     mediaCategoryInfo.iconUri,
-                    mediaCategoryInfo.id
+                    mediaCategoryInfo.description,
+                    mediaCategoryInfo.mediaFlags
                 )
             )
         }

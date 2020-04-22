@@ -37,11 +37,9 @@ internal class GenreProvider(val applicationContext: Context) {
     private fun Cursor.mapToGenreEntity(): Genre {
         val genreName = getColumnIndexOrThrow(MediaStore.Audio.Genres.NAME)
         val genreId = getColumnIndexOrThrow(MediaStore.Audio.Genres._ID)
-        val noOfTracks = getColumnIndexOrThrow(MediaStore.Audio.Genres.Members._COUNT)
         return Genre(
             id = getLong(genreId),
-            name = getString(genreName),
-            noOfTracks = getInt(noOfTracks)
+            name = getString(genreName)
         )
     }
 
@@ -56,8 +54,7 @@ internal class GenreProvider(val applicationContext: Context) {
     private fun getGenreColumns(): Array<String> {
         return arrayOf(
             MediaStore.Audio.Genres._ID,
-            MediaStore.Audio.Genres.NAME,
-            MediaStore.Audio.Genres.Members._COUNT
+            MediaStore.Audio.Genres.NAME
         )
     }
 }
