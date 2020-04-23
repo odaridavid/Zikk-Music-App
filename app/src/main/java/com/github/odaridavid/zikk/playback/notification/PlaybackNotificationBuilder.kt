@@ -18,8 +18,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.provider.MediaStore
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
@@ -38,13 +36,14 @@ internal class PlaybackNotificationBuilder @Inject constructor(
     private val notificationManager: NotificationManager,
     private val mediaSessionCompat: MediaSessionCompat
 ) {
-
+    //TODO Update notification on playback state changes
     fun buildNotification(): Notification {
         createPlaybackNotificationChannel()
 
         val mediaMetadata = mediaSessionCompat.controller.metadata
 
-        val notificationBuilder = NotificationCompat.Builder(context,
+        val notificationBuilder = NotificationCompat.Builder(
+            context,
             CHANNEL_ID
         )
             .apply {
@@ -72,10 +71,15 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                 setSmallIcon(R.drawable.ic_music_note_black_24dp)
                 color = ContextCompat.getColor(context, R.color.colorAccent)
 
+                val playPauseRes =
+                    if (mediaSessionCompat.controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                        R.drawable.ic_pause_black_48dp
+                    else R.drawable.ic_play_arrow_black_48dp
+
                 // Add a pause button
                 addAction(
                     NotificationCompat.Action(
-                        R.drawable.ic_pause_black_48dp,
+                        playPauseRes,
                         context.getString(R.string.playback_action_pause),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                             context,
@@ -101,7 +105,7 @@ internal class PlaybackNotificationBuilder @Inject constructor(
             val name = context.getString(R.string.notification_playback_channel_name)
             val descriptionText =
                 context.getString(R.string.notification_playback_channel_description)
-            val importance = NotificationManager.IMPORTANCE_HIGH
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
