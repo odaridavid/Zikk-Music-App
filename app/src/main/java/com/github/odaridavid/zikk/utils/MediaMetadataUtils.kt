@@ -2,12 +2,15 @@ package com.github.odaridavid.zikk.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat
 import androidx.core.net.toUri
+import com.github.odaridavid.zikk.R
+import java.io.FileNotFoundException
 
 /**
  *
@@ -46,9 +49,13 @@ inline val MediaMetadataCompat.albumArt: Bitmap?
 
 fun getAlbumArtBitmap(context: Context, imageUri: Uri): Bitmap? {
     val cr = context.contentResolver
-    return if (versionFrom(Build.VERSION_CODES.P)) {
-        val src = ImageDecoder.createSource(cr, imageUri)
-        ImageDecoder.decodeBitmap(src)
-    } else MediaStore.Images.Media.getBitmap(cr, imageUri)
+    return try {
+        if (versionFrom(Build.VERSION_CODES.P)) {
+            val src = ImageDecoder.createSource(cr, imageUri)
+            ImageDecoder.decodeBitmap(src)
+        } else MediaStore.Images.Media.getBitmap(cr, imageUri)
+    } catch (e: FileNotFoundException) {
+        BitmapFactory.decodeResource(context.resources, R.drawable.bg_no_art)
+    }
 }
 
