@@ -50,7 +50,7 @@ internal class MediaLoader(
                                     album.noOfSongs,
                                     album.noOfSongs
                                 ),
-                                "${MediaId.ALBUM}${album.id}",
+                                "${MediaId.ALBUM}-${album.id}",
                                 null,
                                 "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
@@ -69,7 +69,7 @@ internal class MediaLoader(
                                     artist.noOfAlbums,
                                     artist.noOfAlbums
                                 ),
-                                "${MediaId.ARTIST}${artist.id}",
+                                "${MediaId.ARTIST}-${artist.id}",
                                 null,
                                 "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
@@ -84,7 +84,7 @@ internal class MediaLoader(
                             createMediaItem(
                                 genre.name,
                                 "",
-                                "${MediaId.GENRE}${genre.id}",
+                                "${MediaId.GENRE}-${genre.id}",
                                 null,
                                 "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
@@ -100,7 +100,7 @@ internal class MediaLoader(
                             createMediaItem(
                                 playlist.name,
                                 playlist.modified,
-                                "${MediaId.PLAYLIST}${playlist.id}",
+                                "${MediaId.PLAYLIST}-${playlist.id}",
                                 null,
                                 "",
                                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
@@ -115,7 +115,7 @@ internal class MediaLoader(
                             createMediaItem(
                                 track.title,
                                 track.artist,
-                                "${MediaId.TRACK}${track.id}",
+                                "${MediaId.TRACK}-${track.id}",
                                 Uri.parse(track.albumArt),
                                 convertMillisecondsToDuration(track.duration.toLong()),
                                 MediaBrowserCompat.MediaItem.FLAG_PLAYABLE

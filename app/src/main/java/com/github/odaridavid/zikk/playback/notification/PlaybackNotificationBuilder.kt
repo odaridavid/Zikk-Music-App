@@ -18,15 +18,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
 import com.github.odaridavid.zikk.R
+import com.github.odaridavid.zikk.utils.*
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
-import com.github.odaridavid.zikk.utils.versionFrom
 import javax.inject.Inject
 
 /**
@@ -35,28 +34,27 @@ import javax.inject.Inject
 internal class PlaybackNotificationBuilder @Inject constructor(
     private val context: Context,
     private val notificationManager: NotificationManager,
-    private val mediaControllerCompat: MediaControllerCompat,
     private val mediaSessionCompat: MediaSessionCompat
 ) {
-
+    //TODO Update notification on playback state changes
     fun buildNotification(): Notification {
         createPlaybackNotificationChannel()
 
-        val mediaMetadata = mediaControllerCompat.metadata
-        val description = mediaMetadata.description
+        val mediaMetadata = mediaSessionCompat.controller.metadata
 
-        val notificationBuilder = NotificationCompat.Builder(context,
+        val notificationBuilder = NotificationCompat.Builder(
+            context,
             CHANNEL_ID
         )
             .apply {
                 // Add the metadata for the currently playing track
-                setContentTitle(description.title)
-                setContentText(description.subtitle)
-                setSubText(description.description)
-                setLargeIcon(description.iconBitmap)
+                setContentTitle(mediaMetadata.title)
+                setContentText(mediaMetadata.artist)
+                setSubText(mediaMetadata.album)
+                setLargeIcon(mediaMetadata.albumArt)
 
                 // Enable launching the player by clicking the notification
-                setContentIntent(mediaControllerCompat.sessionActivity)
+                setContentIntent(mediaSessionCompat.controller.sessionActivity)
 
                 // Stop the service when the notification is swiped away,media sesion callback on stop triggered,Avail API 21 >
                 setDeleteIntent(
@@ -73,10 +71,15 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                 setSmallIcon(R.drawable.ic_music_note_black_24dp)
                 color = ContextCompat.getColor(context, R.color.colorAccent)
 
+                val playPauseRes =
+                    if (mediaSessionCompat.controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                        R.drawable.ic_pause_black_48dp
+                    else R.drawable.ic_play_arrow_black_48dp
+
                 // Add a pause button
                 addAction(
                     NotificationCompat.Action(
-                        R.drawable.ic_pause_black_48dp,
+                        playPauseRes,
                         context.getString(R.string.playback_action_pause),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                             context,
@@ -102,7 +105,7 @@ internal class PlaybackNotificationBuilder @Inject constructor(
             val name = context.getString(R.string.notification_playback_channel_name)
             val descriptionText =
                 context.getString(R.string.notification_playback_channel_description)
-            val importance = NotificationManager.IMPORTANCE_HIGH
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }

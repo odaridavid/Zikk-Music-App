@@ -21,6 +21,7 @@ import android.support.v4.media.session.PlaybackStateCompat.*
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.playback.session.MediaLoader
+import com.github.odaridavid.zikk.playback.session.TrackPlayer
 import com.github.odaridavid.zikk.repositories.*
 import dagger.Module
 import dagger.Provides
@@ -41,25 +42,17 @@ internal class PlaybackModule {
                     )
                     .build()
             )
+
+            //Enable callbacks from MediaButtons and TransportControls
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
+                        or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
             //TODO Set media session metadata
             //setMetadata()
         }
     }
 
-    @Provides
-    fun providesPlaybackNotificationBuilder(
-        context: Context,
-        mediaControllerCompat: MediaControllerCompat,
-        mediaSessionCompat: MediaSessionCompat,
-        notificationManager: NotificationManager
-    ): PlaybackNotificationBuilder {
-        return PlaybackNotificationBuilder(
-            context,
-            notificationManager,
-            mediaControllerCompat,
-            mediaSessionCompat
-        )
-    }
 
     @Provides
     fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
@@ -93,6 +86,11 @@ internal class PlaybackModule {
             trackRepository,
             playlistRepository
         )
+    }
+
+    @Provides
+    fun providesTrackPlayer(context: Context): TrackPlayer {
+        return TrackPlayer(context)
     }
 
 }

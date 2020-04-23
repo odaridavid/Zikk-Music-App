@@ -77,6 +77,17 @@ internal class TrackRepository(
         return cr.query(uri, projection, selection, selectionArgs, sortOrder)
     }
 
+    private fun getTrackWithIdCursor(trackId: String): Cursor? {
+        val cr = applicationContext.contentResolver
+        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val projection: Array<String> = getTrackColumns()
+        val sortOrder = "${MediaStore.Audio.Media.DATE_MODIFIED} DESC"
+        val selection =
+            "is_music=? AND _id=? " //Selects only music,leaves out media such as notifications
+        val selectionArgs = arrayOf("1", trackId)
+        return cr.query(uri, projection, selection, selectionArgs, sortOrder)
+    }
+
     private fun getTrackColumns(): Array<String> {
         return arrayOf(
             MediaStore.Audio.Media._ID,
@@ -89,6 +100,17 @@ internal class TrackRepository(
             MediaStore.Audio.Media.TRACK,
             MEDIA_STORE_AUDIO_DURATION_COLUMN
         )
+    }
+
+    fun loadTrackForId(trackId: String): Track? {
+        val tracks = mutableListOf<Track>()
+        val cursor =
+            getTrackWithIdCursor(trackId) ?: throw IllegalStateException("Tracks cursor is null")
+        while (cursor.moveToNext()) {
+            tracks.add(cursor.mapToTrackEntity())
+        }
+        cursor.close()
+        return tracks.firstOrNull()
     }
 
     companion object {

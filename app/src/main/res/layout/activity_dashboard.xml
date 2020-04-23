@@ -60,6 +60,7 @@
         android:layout_width="match_parent"
         android:layout_height="72dp"
         app:cardBackgroundColor="@android:color/black"
+        android:visibility="gone"
         app:cardCornerRadius="0dp"
         app:layout_constraintBottom_toBottomOf="parent">
 

@@ -55,7 +55,7 @@ internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
                 findViewById<TextView>(R.id.track_artist_text_view).apply {
                     text = mediaItem.description.subtitle
                 }
-                setOnClickListener { onClick(mediaItem.description.mediaId) }
+                setOnClickListener { onClick(mediaItem.mediaId) }
             }
         }
     }
