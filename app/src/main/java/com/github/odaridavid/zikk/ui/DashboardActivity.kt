@@ -57,14 +57,25 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
             super.onPlaybackStateChanged(state)
             Timber.d("Playback State Changed:$state")
             //TODO Update on playback state changed
-            if (now_playing_card.visibility == View.GONE) {
-                now_playing_card.show()
+            requireNotNull(state)
+            when (state.state) {
+                PlaybackStateCompat.STATE_PLAYING -> {
+                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
+                }
+                PlaybackStateCompat.STATE_PAUSED -> {
+                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_arrow_black_48dp))
+                }
             }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
             Timber.d("Metadata Changed $metadata")
+            //TODO Check if is first time or if songs recently played
+            //TODO Show currently playing track
+            if (now_playing_card.visibility == View.GONE) {
+                now_playing_card.show()
+            }
             val metadataDesc = metadata?.description
             trackTitleTextView.text = metadataDesc?.title ?: ""
             trackArtistTextView.text = metadataDesc?.subtitle ?: ""
@@ -118,7 +129,6 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
         playNextButton = findViewById(R.id.play_next_button)
         artImageView = findViewById(R.id.album_art_image_view)
         mediaItemAdapter = MediaItemAdapter { id ->
-            showToast("Didnt work $id")
             mediaTranspotControls?.playFromMediaId(id, null)
         }
         mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
@@ -143,7 +153,14 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                             this@DashboardActivity,
                             mediaControllerCompat
                         )
-                        buildTransportControls()
+
+                        playPauseButton.setOnClickListener {
+                            if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                                mediaTranspotControls?.pause()
+                            else mediaTranspotControls?.play()
+                        }
+
+                        mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
                     }
                 }
 
@@ -159,28 +176,6 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                     Timber.i("Connection with media browser failed")
                 }
             }, null)
-    }
-
-    private fun buildTransportControls() {
-        playPauseButton.apply {
-            setOnClickListener {
-
-                val pbState = mediaControllerCompat?.playbackState?.state
-                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
-                    mediaTranspotControls?.pause()
-                } else {
-                    mediaTranspotControls?.play()
-                }
-            }
-        }
-
-        // Display the initial state
-        val metadata = mediaControllerCompat?.metadata
-        val pbState = mediaControllerCompat?.playbackState
-
-        Timber.d("Built Transport Controls ${metadata?.description?.title}")
-
-        mediaControllerCompat?.registerCallback(mediaControllerCompatCallback)
     }
 
     private fun observeMediaBrowserConnection() {

@@ -25,6 +25,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.net.toUri
 import com.github.odaridavid.zikk.models.Track
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
@@ -53,13 +54,14 @@ internal class MediaSessionCallback(
     //TODO Cleanup
     private var audioFocusRequest: AudioFocusRequest? = null
     private var metadataCompatBuilder = Builder()
+    private var playbackStateBuilder = PlaybackStateCompat.Builder()
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         super.onPlayFromMediaId(mediaId, extras)
         val request = initAudioFocus()
 
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            initSession(mediaId)
+            resumeSession(mediaId)
         }
     }
 
@@ -70,78 +72,8 @@ internal class MediaSessionCallback(
         val request = initAudioFocus()
 
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            initSession()
+            resumeSession()
         }
-    }
-
-    private fun initAudioFocus(): Int {
-        return if (versionFrom(Build.VERSION_CODES.O)) {
-            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setOnAudioFocusChangeListener(this)
-                .setAudioAttributes(AudioAttributes.Builder().run {
-                    setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    build()
-                })
-                .build()
-            audioManager.requestAudioFocus(audioFocusRequest!!)
-        } else {
-            audioManager.requestAudioFocus(
-                this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN
-            )
-        }
-    }
-
-    private fun initSession(mediaId: String? = null) {
-        with(serviceContext) {
-            //This ensures that the service starts and continues to run, even when all UI MediaBrowser activities that are bound to it unbind.
-            startService(Intent(this, ZikkMediaService::class.java))
-
-            mediaSessionCompat.isActive = true
-            val trackId = convertMediaIdToFileId(mediaId)
-            if (trackId == 0L) return
-            val contentUris =
-                ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId)
-            val track = trackRepository.loadTrackForId(trackId.toString()) ?: return
-            Timber.d("$track")
-            with(trackPlayer) {
-                reset()
-                setDataSource(serviceContext, contentUris)
-                prepare()
-            }
-
-            setMetadata(track)
-
-            // Register BECOME_NOISY BroadcastReceiver
-            registerReceiver(
-                becomingNoisyReceiver,
-                intentFilter
-            )
-
-            val notification = playbackNotificationBuilder.buildNotification()
-            startForeground(PLAYBACK_NOTIFICATION_ID, notification)
-        }
-    }
-
-    private fun setMetadata(track: Track) {
-
-        val trackMetadata = metadataCompatBuilder.apply {
-            putString(METADATA_KEY_ALBUM, track.album)
-            putString(METADATA_KEY_ARTIST, track.artist)
-            putString(METADATA_KEY_TITLE, track.title)
-            putString(METADATA_KEY_ALBUM_ART_URI, track.albumArt)
-            putBitmap(
-                METADATA_KEY_ALBUM_ART,
-                getAlbumArtBitmap(serviceContext, track.albumArt.toUri())
-            )
-            putString(METADATA_KEY_MEDIA_ID, track.id.toString())
-            putLong(METADATA_KEY_DURATION, track.duration.toLong())
-        }
-        mediaSessionCompat.setMetadata(trackMetadata.build())
-    }
-
-    private fun convertMediaIdToFileId(mediaId: String?): Long {
-        val spIndex = mediaId?.indexOf('-') ?: -1
-        return mediaId?.substring(spIndex + 1)!!.toLong()
     }
 
     override fun onPause() {
@@ -149,7 +81,17 @@ internal class MediaSessionCallback(
         with(serviceContext) {
             trackPlayer.pause()
 
+            //TODO Update notification on pause
+
             unregisterReceiver(becomingNoisyReceiver)
+
+            val ps = playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PAUSED,
+                mediaSessionCompat.controller.playbackState.position,
+                0.0F
+            )
+
+            mediaSessionCompat.setPlaybackState(ps.build())
 
             // Take the service out of the foreground
             stopForeground(false)
@@ -169,16 +111,6 @@ internal class MediaSessionCallback(
 
             mediaSessionCompat.isActive = false
             stopForeground(false)
-        }
-    }
-
-    private fun releaseAudioFocus() {
-        if (versionFrom(Build.VERSION_CODES.O)) {
-            audioFocusRequest?.run {
-                audioManager.abandonAudioFocusRequest(this)
-            }
-        } else {
-            audioManager.abandonAudioFocus(this)
         }
     }
 
@@ -202,6 +134,124 @@ internal class MediaSessionCallback(
                 trackPlayer.start()
             }
         }
+    }
+
+    private fun resumeSession(mediaId: String) {
+        with(serviceContext) {
+            //This ensures that the service starts and continues to run, even when all UI MediaBrowser activities that are bound to it unbind.
+            startService(Intent(this, ZikkMediaService::class.java))
+
+            mediaSessionCompat.isActive = true
+
+            val trackId = convertMediaIdToTrackId(mediaId)
+            if (trackId == 0L) return
+            val contentUris =
+                ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId)
+            val track = trackRepository.loadTrackForId(trackId.toString()) ?: return
+            Timber.d("$track")
+            with(trackPlayer) {
+                reset()
+                setDataSource(serviceContext, contentUris)
+                prepare()
+            }
+
+            setMetadata(track)
+
+            val ps = playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PLAYING,
+                mediaSessionCompat.controller.playbackState.position,
+                0.0F
+            )
+
+            mediaSessionCompat.setPlaybackState(ps.build())
+
+            // Register BECOME_NOISY BroadcastReceiver
+            registerReceiver(
+                becomingNoisyReceiver,
+                intentFilter
+            )
+
+            val notification = playbackNotificationBuilder.buildNotification()
+            startForeground(PLAYBACK_NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun resumeSession() {
+        with(serviceContext) {
+            //This ensures that the service starts and continues to run, even when all UI MediaBrowser activities that are bound to it unbind.
+            startService(Intent(this, ZikkMediaService::class.java))
+
+            mediaSessionCompat.isActive = true
+
+            with(trackPlayer) {
+                start()
+            }
+
+            val ps = playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PLAYING,
+                mediaSessionCompat.controller.playbackState.position,
+                0.0F
+            )
+
+            mediaSessionCompat.setPlaybackState(ps.build())
+
+            // Register BECOME_NOISY BroadcastReceiver
+            registerReceiver(
+                becomingNoisyReceiver,
+                intentFilter
+            )
+
+            val notification = playbackNotificationBuilder.buildNotification()
+            startForeground(PLAYBACK_NOTIFICATION_ID, notification)
+        }
+    }
+    private fun initAudioFocus(): Int {
+        return if (versionFrom(Build.VERSION_CODES.O)) {
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setOnAudioFocusChangeListener(this)
+                .setAudioAttributes(AudioAttributes.Builder().run {
+                    setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    build()
+                })
+                .build()
+            audioManager.requestAudioFocus(audioFocusRequest!!)
+        } else {
+            audioManager.requestAudioFocus(
+                this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
+    }
+
+    private fun setMetadata(track: Track) {
+
+        val trackMetadata = metadataCompatBuilder.apply {
+            putString(METADATA_KEY_ALBUM, track.album)
+            putString(METADATA_KEY_ARTIST, track.artist)
+            putString(METADATA_KEY_TITLE, track.title)
+            putString(METADATA_KEY_ALBUM_ART_URI, track.albumArt)
+            putBitmap(
+                METADATA_KEY_ALBUM_ART,
+                getAlbumArtBitmap(serviceContext, track.albumArt.toUri())
+            )
+            putString(METADATA_KEY_MEDIA_ID, track.id.toString())
+            putLong(METADATA_KEY_DURATION, track.duration.toLong())
+        }
+        mediaSessionCompat.setMetadata(trackMetadata.build())
+    }
+
+    private fun releaseAudioFocus() {
+        if (versionFrom(Build.VERSION_CODES.O)) {
+            audioFocusRequest?.run {
+                audioManager.abandonAudioFocusRequest(this)
+            }
+        } else {
+            audioManager.abandonAudioFocus(this)
+        }
+    }
+
+    private fun convertMediaIdToTrackId(mediaId: String): Long {
+        val spIndex = mediaId.indexOf('-')
+        return mediaId.substring(spIndex + 1).toLong()
     }
 
     companion object {
