@@ -13,13 +13,11 @@ package com.github.odaridavid.zikk.di
  * the License.
  *
  **/
-import android.app.NotificationManager
 import android.content.Context
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
-import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.playback.session.MediaLoader
 import com.github.odaridavid.zikk.playback.session.TrackPlayer
 import com.github.odaridavid.zikk.repositories.*
@@ -28,46 +26,6 @@ import dagger.Provides
 
 @Module
 internal class PlaybackModule {
-
-    @Provides
-    fun providesMediaSessionCompat(
-        context: Context
-    ): MediaSessionCompat {
-        return MediaSessionCompat(context, "Zikk Media Service").apply {
-
-            setPlaybackState(
-                Builder()
-                    .setActions(
-                        ACTION_PLAY or ACTION_PLAY_PAUSE or ACTION_PAUSE or ACTION_STOP or ACTION_SKIP_TO_NEXT
-                    )
-                    .build()
-            )
-
-            //Enable callbacks from MediaButtons and TransportControls
-            setFlags(
-                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
-                        or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-            )
-            //TODO Set media session metadata
-            //setMetadata()
-        }
-    }
-
-
-    @Provides
-    fun providesBecomingNoisyReceiver(mediaControllerCompat: MediaControllerCompat): BecomingNoisyReceiver {
-        return BecomingNoisyReceiver(
-            mediaControllerCompat
-        )
-    }
-
-    @Provides
-    fun providesMediaControllerCompat(
-        context: Context,
-        mediaSessionCompat: MediaSessionCompat
-    ): MediaControllerCompat {
-        return MediaControllerCompat(context, mediaSessionCompat)
-    }
 
     @Provides
     fun providesMediaLoader(
@@ -89,8 +47,8 @@ internal class PlaybackModule {
     }
 
     @Provides
-    fun providesTrackPlayer(context: Context): TrackPlayer {
-        return TrackPlayer(context)
+    fun providesTrackPlayer(context: Context, trackRepository: TrackRepository): TrackPlayer {
+        return TrackPlayer(context, trackRepository)
     }
 
 }

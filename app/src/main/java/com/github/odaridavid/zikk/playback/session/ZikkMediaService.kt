@@ -15,19 +15,23 @@ package com.github.odaridavid.zikk.playback.session
  **/
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.PlaybackStateCompat.*
 import androidx.media.MediaBrowserServiceCompat
+import androidx.media.session.MediaButtonReceiver
+import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
-import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
-import com.github.odaridavid.zikk.repositories.TrackRepository
 import com.github.odaridavid.zikk.utils.injector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -37,14 +41,13 @@ import javax.inject.Inject
  * @see <a href="Media App Architecture">https://developer.android.com/guide/topics/media-apps/media-apps-overview</a>
  */
 internal class ZikkMediaService : MediaBrowserServiceCompat() {
-    //TODO Optimize for android auto and wearables
-    @Inject
-    lateinit var mediaSessionCompat: MediaSessionCompat
+
+    private lateinit var mediaSessionCompat: MediaSessionCompat
+    private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
+    private val playbackStateCompatBuilder = PlaybackStateCompat.Builder()
 
     @Inject
     lateinit var mediaLoader: MediaLoader
-
-    lateinit var playbackNotificationBuilder: PlaybackNotificationBuilder
 
     @Inject
     lateinit var audioManager: AudioManager
@@ -53,19 +56,15 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
     lateinit var notificationManager: NotificationManager
 
     @Inject
-    lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
-
-    @Inject
     lateinit var trackPlayer: TrackPlayer
-
-    @Inject
-    lateinit var trackRepository: TrackRepository
 
     override fun onCreate() {
         injector.inject(this)
         super.onCreate()
+        mediaSessionCompat = createMediaSession()
+        mediaSessionCompat.isActive = true
 
-        // Build a PendingIntent that can be used to launch the UI.
+        //TODO Launch a now playing activity with playing item metadata
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
                 PendingIntent.getActivity(this, 0, sessionIntent, 0)
@@ -74,11 +73,13 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
         this.sessionToken = mediaSessionCompat.sessionToken
 
-        playbackNotificationBuilder = PlaybackNotificationBuilder(
+        val playbackNotificationBuilder = PlaybackNotificationBuilder(
             this,
             notificationManager,
             mediaSessionCompat
         )
+
+        becomingNoisyReceiver = BecomingNoisyReceiver(mediaSessionCompat.controller)
 
         mediaSessionCompat.setCallback(
             MediaSessionCallback(
@@ -87,10 +88,17 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
                 mediaSessionCompat,
                 audioManager,
                 becomingNoisyReceiver,
-                trackPlayer,
-                trackRepository
+                playbackStateCompatBuilder,
+                trackPlayer
             )
         )
+    }
+
+
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Timber.d("On start command : ${intent.action}")
+        MediaButtonReceiver.handleIntent(mediaSessionCompat, intent)
+        return START_STICKY
     }
 
     /**
@@ -138,18 +146,32 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mediaSessionCompat.isActive = false
         trackPlayer.release()
         mediaSessionCompat.release()
+    }
+
+    private fun createMediaSession(): MediaSessionCompat {
+        return MediaSessionCompat(this, "Zikk Media Service").apply {
+            setPlaybackState(createPlaybackState())
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
+                        or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
+        }
+    }
+
+    private fun createPlaybackState(): PlaybackStateCompat {
+        return playbackStateCompatBuilder
+            .setActions(
+                ACTION_PLAY or ACTION_PLAY_PAUSE or ACTION_PAUSE or ACTION_STOP or ACTION_SKIP_TO_NEXT
+            )
+            .build()
+
     }
 
     companion object {
         private const val MEDIA_ROOT_ID = "root"
         private const val EMPTY_MEDIA_ROOT_ID = "empty_root"
-
-        //Player Actions
-        private const val ACTION_PLAY: String = "com.github.odaridavid.zikk.playback.session.PLAY"
-        private const val ACTION_PAUSE: String = "com.github.odaridavid.zikk.playback.session.PAUSE"
-        private const val ACTION_STOP: String = "com.github.odaridavid.zikk.playback.session.STOP"
-        private const val ACTION_SKIP: String = "com.github.odaridavid.zikk.playback.session.SKIP"
     }
 }

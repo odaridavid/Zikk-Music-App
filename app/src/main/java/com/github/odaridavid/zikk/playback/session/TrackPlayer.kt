@@ -13,18 +13,25 @@ package com.github.odaridavid.zikk.playback.session
  * the License.
  *
  **/
+import android.content.ContentUris
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.PowerManager
+import android.provider.MediaStore
+import com.github.odaridavid.zikk.models.Track
+import com.github.odaridavid.zikk.repositories.TrackRepository
 import timber.log.Timber
 
 /**
  * Handles controlling of audio output,bound to a service to ensure playing persists even after
  * user leaves the app.
  */
-class TrackPlayer(val context: Context) : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+internal class TrackPlayer(
+    val context: Context,
+    private val trackRepository: TrackRepository
+) :
+    MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
     private var mediaPlayer: MediaPlayer? = null
 
@@ -75,8 +82,17 @@ class TrackPlayer(val context: Context) : MediaPlayer.OnPreparedListener, MediaP
         mediaPlayer = null
     }
 
-    fun setDataSource(context: Context, uri: Uri) {
-        mediaPlayer?.setDataSource(context, uri)
+    fun getTrackInformation(mediaId: String): Track? {
+        val trackId = convertMediaIdToTrackId(mediaId)
+        return trackRepository.loadTrackForId(trackId.toString())
+    }
+
+    fun setDataSourceFromMediaId(context: Context, mediaId: String) {
+        val trackId = convertMediaIdToTrackId(mediaId)
+        if (trackId == 0L) return
+        val contentUris =
+            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId)
+        mediaPlayer?.setDataSource(context, contentUris)
     }
 
     override fun onPrepared(mediaPlayer: MediaPlayer?) {
@@ -88,6 +104,11 @@ class TrackPlayer(val context: Context) : MediaPlayer.OnPreparedListener, MediaP
         Timber.i("Media Player Error : $what")
         reset()
         return true
+    }
+
+    private fun convertMediaIdToTrackId(mediaId: String): Long {
+        val spIndex = mediaId.indexOf('-')
+        return mediaId.substring(spIndex + 1).toLong()
     }
 
 }

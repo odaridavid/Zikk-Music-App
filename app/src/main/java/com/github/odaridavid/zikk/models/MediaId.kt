@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.playback
+package com.github.odaridavid.zikk.models
 
 /**
  *

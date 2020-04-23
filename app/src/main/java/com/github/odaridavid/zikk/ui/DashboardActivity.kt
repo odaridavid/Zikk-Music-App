@@ -32,7 +32,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
-import com.github.odaridavid.zikk.playback.MediaId
+import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.utils.*
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
@@ -45,8 +45,7 @@ import timber.log.Timber
  */
 internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
-    //TODO Control player through media controller and display current state
-    //TODO DI and Code Cleanup
+    //TODO DI and Code Cleanup on bloated callbacks in activity
     //TODO Show player if a song has been played before
     private var mediaBrowser: MediaBrowserCompat? = null
 
@@ -55,24 +54,21 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             super.onPlaybackStateChanged(state)
-            Timber.d("Playback State Changed:$state")
-            //TODO Update on playback state changed
             requireNotNull(state)
             when (state.state) {
                 PlaybackStateCompat.STATE_PLAYING -> {
                     playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
                 }
                 PlaybackStateCompat.STATE_PAUSED -> {
-                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_arrow_black_48dp))
+                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
                 }
             }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
-            Timber.d("Metadata Changed $metadata")
-            //TODO Check if is first time or if songs recently played
-            //TODO Show currently playing track
+            //TODO Check if is first time or if track recently played and load metadata from room or shared pref
+            //TODO Show currently playing track in session
             if (now_playing_card.visibility == View.GONE) {
                 now_playing_card.show()
             }
@@ -80,7 +76,6 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
             trackTitleTextView.text = metadataDesc?.title ?: ""
             trackArtistTextView.text = metadataDesc?.subtitle ?: ""
             artImageView.load(metadataDesc?.iconUri ?: Uri.parse(""))
-
         }
     }
 
@@ -129,6 +124,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
         playNextButton = findViewById(R.id.play_next_button)
         artImageView = findViewById(R.id.album_art_image_view)
         mediaItemAdapter = MediaItemAdapter { id ->
+            //TODO Control transport controls with viewmodel
             mediaTranspotControls?.playFromMediaId(id, null)
         }
         mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
@@ -148,12 +144,13 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                     mediaBrowser?.run {
                         val mediaControllerCompat =
                             MediaControllerCompat(this@DashboardActivity, sessionToken)
-                        /* Save the controller */
+
                         MediaControllerCompat.setMediaController(
                             this@DashboardActivity,
                             mediaControllerCompat
                         )
 
+                        //TODO Control with viewmodel
                         playPauseButton.setOnClickListener {
                             if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
                                 mediaTranspotControls?.pause()
@@ -192,7 +189,6 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                         children: MutableList<MediaBrowserCompat.MediaItem>
                     ) {
                         super.onChildrenLoaded(parentId, children)
-                        Timber.d("$parentId Loaded with ${children.count()} items")
                         dashboardProgressBar.hide()
                         mediaItemAdapter.submitList(children)
                     }

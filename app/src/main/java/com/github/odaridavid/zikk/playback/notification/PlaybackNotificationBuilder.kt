@@ -19,7 +19,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.PlaybackStateCompat.*
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
@@ -36,16 +37,15 @@ internal class PlaybackNotificationBuilder @Inject constructor(
     private val notificationManager: NotificationManager,
     private val mediaSessionCompat: MediaSessionCompat
 ) {
-    //TODO Update notification on playback state changes
-    fun buildNotification(): Notification {
-        createPlaybackNotificationChannel()
+
+    fun build(): Notification {
+
+        if (versionFrom(Build.VERSION_CODES.O) && !hasPlaybackChannel())
+            createPlaybackNotificationChannel()
 
         val mediaMetadata = mediaSessionCompat.controller.metadata
 
-        val notificationBuilder = NotificationCompat.Builder(
-            context,
-            CHANNEL_ID
-        )
+        val notificationBuilder = NotificationCompat.Builder(context, PLAYBACK_CHANNEL_ID)
             .apply {
                 // Add the metadata for the currently playing track
                 setContentTitle(mediaMetadata.title)
@@ -56,15 +56,13 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                 // Enable launching the player by clicking the notification
                 setContentIntent(mediaSessionCompat.controller.sessionActivity)
 
-                // Stop the service when the notification is swiped away,media sesion callback on stop triggered,Avail API 21 >
                 setDeleteIntent(
                     MediaButtonReceiver.buildMediaButtonPendingIntent(
                         context,
-                        PlaybackStateCompat.ACTION_STOP
+                        ACTION_STOP
                     )
                 )
 
-                // Make the transport controls visible on the lockscreen
                 setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
                 //TODO Replace with app icon
@@ -72,27 +70,42 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                 color = ContextCompat.getColor(context, R.color.colorAccent)
 
                 val playPauseRes =
-                    if (mediaSessionCompat.controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                    if (mediaSessionCompat.controller.playbackState.state == STATE_PLAYING)
                         R.drawable.ic_pause_black_48dp
-                    else R.drawable.ic_play_arrow_black_48dp
+                    else R.drawable.ic_play_black_48dp
 
-                // Add a pause button
                 addAction(
                     NotificationCompat.Action(
                         playPauseRes,
                         context.getString(R.string.playback_action_pause),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                             context,
-                            PlaybackStateCompat.ACTION_PLAY_PAUSE
+                            ACTION_PLAY_PAUSE
+                        )
+                    )
+                )
+                addAction(
+                    NotificationCompat.Action(
+                        R.drawable.ic_skip_next_black_48dp,
+                        context.getString(R.string.playback_action_skip_to_next),
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            context,
+                            ACTION_SKIP_TO_NEXT
                         )
                     )
                 )
 
-                //Use Notification Media Style
                 setStyle(
                     androidx.media.app.NotificationCompat.MediaStyle()
+                        .setCancelButtonIntent(
+                            MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                context,
+                                ACTION_STOP
+                            )
+                        )
                         .setMediaSession(mediaSessionCompat.sessionToken)
-                        .setShowActionsInCompactView(0)
+                        .setShowActionsInCompactView(0, 1)
+                        .setShowCancelButton(true)
                 )
             }
         val notification = notificationBuilder.build()
@@ -100,20 +113,24 @@ internal class PlaybackNotificationBuilder @Inject constructor(
         return notification
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createPlaybackNotificationChannel() {
-        if (versionFrom(Build.VERSION_CODES.O)) {
-            val name = context.getString(R.string.notification_playback_channel_name)
-            val descriptionText =
-                context.getString(R.string.notification_playback_channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            notificationManager.createNotificationChannel(channel)
+        val name = context.getString(R.string.notification_playback_channel_name)
+        val descriptionText =
+            context.getString(R.string.notification_playback_channel_description)
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(PLAYBACK_CHANNEL_ID, name, importance).apply {
+            description = descriptionText
         }
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun hasPlaybackChannel(): Boolean {
+        return notificationManager.getNotificationChannel(PLAYBACK_CHANNEL_ID) != null
     }
 
     companion object {
-        private const val CHANNEL_ID = "playback"
+        private const val PLAYBACK_CHANNEL_ID = "playback"
     }
 }
