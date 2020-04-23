@@ -14,15 +14,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".base.BaseActivity"></activity>
+
         <!-- Activities -->
+        <activity android:name=".base.BaseActivity" />
         <activity android:name=".ui.DashboardActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Services -->
+        </activity>
+
+        <!-- Services -->
         <service
             android:name=".playback.session.ZikkMediaService"
             android:exported="true"
@@ -30,8 +33,15 @@
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
-        </service> <!-- Broadcast Receivers -->
+        </service>
+
+        <!-- Broadcast Receivers -->
         <receiver android:name=".playback.BecomingNoisyReceiver" />
+        <receiver android:name="androidx.media.session.MediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

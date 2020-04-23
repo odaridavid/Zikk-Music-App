@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.playback.MediaCategoryInfo
-import com.github.odaridavid.zikk.playback.MediaId
+import com.github.odaridavid.zikk.models.MediaCategoryInfo
+import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.repositories.*
 import com.github.odaridavid.zikk.utils.convertMillisecondsToDuration
 import com.github.odaridavid.zikk.utils.createMediaItem
