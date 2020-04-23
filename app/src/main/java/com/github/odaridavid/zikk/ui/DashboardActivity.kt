@@ -15,22 +15,28 @@ package com.github.odaridavid.zikk.ui
  **/
 import android.content.ComponentName
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
+import coil.api.load
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
 import com.github.odaridavid.zikk.playback.MediaId
-import com.github.odaridavid.zikk.playback.controller.MediaControllerCompatCallback
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
-import com.github.odaridavid.zikk.utils.hide
-import com.github.odaridavid.zikk.utils.injector
-import com.github.odaridavid.zikk.utils.mediaControllerCompat
+import com.github.odaridavid.zikk.utils.*
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
+import kotlinx.android.synthetic.main.activity_dashboard.*
 import timber.log.Timber
 
 /**
@@ -41,9 +47,38 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
     //TODO Control player through media controller and display current state
     //TODO DI and Code Cleanup
-    //TODO Handle different media items in their respective fragments
+    //TODO Show player if a song has been played before
     private var mediaBrowser: MediaBrowserCompat? = null
-    private var mediaControllerCompatCallback = MediaControllerCompatCallback()
+
+    // Media controller callback receives updates of state changes from the active media session
+    private var mediaControllerCompatCallback = object : MediaControllerCompat.Callback() {
+
+        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+            super.onPlaybackStateChanged(state)
+            Timber.d("Playback State Changed:$state")
+            //TODO Update on playback state changed
+            if (now_playing_card.visibility == View.GONE) {
+                now_playing_card.show()
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+            super.onMetadataChanged(metadata)
+            Timber.d("Metadata Changed $metadata")
+            val metadataDesc = metadata?.description
+            trackTitleTextView.text = metadataDesc?.title ?: ""
+            trackArtistTextView.text = metadataDesc?.subtitle ?: ""
+            artImageView.load(metadataDesc?.iconUri ?: Uri.parse(""))
+
+        }
+    }
+
+    //MediaPlayer UI
+    private lateinit var trackArtistTextView: TextView
+    private lateinit var trackTitleTextView: TextView
+    private lateinit var playPauseButton: ImageButton
+    private lateinit var playNextButton: ImageButton
+    private lateinit var artImageView: ImageView
 
     private lateinit var mediaItemRecyclerView: RecyclerView
     private lateinit var dashboardProgressBar: ProgressBar
@@ -77,8 +112,14 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
     private fun initViews() {
         mediaItemRecyclerView = findViewById(R.id.tracks_recycler_view)
         dashboardProgressBar = findViewById(R.id.dashboard_progress_bar)
+        trackArtistTextView = findViewById(R.id.track_artist_text_view)
+        trackTitleTextView = findViewById(R.id.track_title_text_view)
+        playPauseButton = findViewById(R.id.play_pause_button)
+        playNextButton = findViewById(R.id.play_next_button)
+        artImageView = findViewById(R.id.album_art_image_view)
         mediaItemAdapter = MediaItemAdapter { id ->
-            //TODO Browse content with media browser service
+            showToast("Didnt work $id")
+            mediaTranspotControls?.playFromMediaId(id, null)
         }
         mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
     }
@@ -102,9 +143,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
                             this@DashboardActivity,
                             mediaControllerCompat
                         )
-
-                        mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
-
+                        buildTransportControls()
                     }
                 }
 
@@ -122,13 +161,35 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
             }, null)
     }
 
+    private fun buildTransportControls() {
+        playPauseButton.apply {
+            setOnClickListener {
+
+                val pbState = mediaControllerCompat?.playbackState?.state
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    mediaTranspotControls?.pause()
+                } else {
+                    mediaTranspotControls?.play()
+                }
+            }
+        }
+
+        // Display the initial state
+        val metadata = mediaControllerCompat?.metadata
+        val pbState = mediaControllerCompat?.playbackState
+
+        Timber.d("Built Transport Controls ${metadata?.description?.title}")
+
+        mediaControllerCompat?.registerCallback(mediaControllerCompatCallback)
+    }
+
     private fun observeMediaBrowserConnection() {
         //After the client connects, it can traverse the content hierarchy by making repeated calls
         //to MediaBrowserCompat.subscribe() to build a local representation of the UI
         dashboardViewModel.isMediaBrowserConnected.observe(this, Observer { isConnected ->
             if (!isConnected) mediaBrowser?.run { unsubscribe(root) }
             else mediaBrowser?.subscribe(
-                MediaId.TRACK.toString(),
+                MediaId.TRACK.toString(), //TODO Handle different media items in their respective fragments
                 object : MediaBrowserCompat.SubscriptionCallback() {
 
                     override fun onChildrenLoaded(

@@ -13,6 +13,7 @@ package com.github.odaridavid.zikk.playback.session
  * the License.
  *
  **/
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.media.AudioManager
 import android.os.Bundle
@@ -22,6 +23,7 @@ import androidx.media.MediaBrowserServiceCompat
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.playback.MediaId
 import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.repositories.TrackRepository
 import com.github.odaridavid.zikk.utils.injector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -42,14 +44,22 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var mediaLoader: MediaLoader
 
-    @Inject
     lateinit var playbackNotificationBuilder: PlaybackNotificationBuilder
 
     @Inject
     lateinit var audioManager: AudioManager
 
     @Inject
+    lateinit var notificationManager: NotificationManager
+
+    @Inject
     lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
+
+    @Inject
+    lateinit var trackPlayer: TrackPlayer
+
+    @Inject
+    lateinit var trackRepository: TrackRepository
 
     override fun onCreate() {
         injector.inject(this)
@@ -64,18 +74,23 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
         this.sessionToken = mediaSessionCompat.sessionToken
 
+        playbackNotificationBuilder = PlaybackNotificationBuilder(
+            this,
+            notificationManager,
+            mediaSessionCompat
+        )
+
         mediaSessionCompat.setCallback(
             MediaSessionCallback(
                 this,
                 playbackNotificationBuilder,
                 mediaSessionCompat,
                 audioManager,
-                becomingNoisyReceiver
+                becomingNoisyReceiver,
+                trackPlayer,
+                trackRepository
             )
         )
-        //TODO Set track player data source to play
-        // trackPlayer.setDataSource(applicationContext, contentUri)
-
     }
 
     /**
@@ -123,12 +138,18 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
     override fun onDestroy() {
         super.onDestroy()
-        TrackPlayer.release()
+        trackPlayer.release()
         mediaSessionCompat.release()
     }
 
     companion object {
         private const val MEDIA_ROOT_ID = "root"
         private const val EMPTY_MEDIA_ROOT_ID = "empty_root"
+
+        //Player Actions
+        private const val ACTION_PLAY: String = "com.github.odaridavid.zikk.playback.session.PLAY"
+        private const val ACTION_PAUSE: String = "com.github.odaridavid.zikk.playback.session.PAUSE"
+        private const val ACTION_STOP: String = "com.github.odaridavid.zikk.playback.session.STOP"
+        private const val ACTION_SKIP: String = "com.github.odaridavid.zikk.playback.session.SKIP"
     }
 }

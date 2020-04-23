@@ -17,13 +17,14 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.PowerManager
 import timber.log.Timber
 
 /**
  * Handles controlling of audio output,bound to a service to ensure playing persists even after
  * user leaves the app.
  */
-object TrackPlayer : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+class TrackPlayer(val context: Context) : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
     private var mediaPlayer: MediaPlayer? = null
 
@@ -33,6 +34,7 @@ object TrackPlayer : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener
 
     private fun initPlayer() {
         mediaPlayer = MediaPlayer().apply {
+            setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
             setAudioAttributes(
                 AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build()
