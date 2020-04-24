@@ -22,7 +22,6 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -33,15 +32,15 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
-import com.github.odaridavid.zikk.PlayableTrack
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
 import com.github.odaridavid.zikk.data.ShowPlayerPreference
+import com.github.odaridavid.zikk.mappers.PlayableTrack
+import com.github.odaridavid.zikk.mappers.toTrack
 import com.github.odaridavid.zikk.models.MediaId
+import com.github.odaridavid.zikk.models.PlaybackStatus
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
-import com.github.odaridavid.zikk.toTrack
 import com.github.odaridavid.zikk.utils.*
-import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -59,7 +58,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     lateinit var sharedPreferences: SharedPreferences
 
     private var mediaBrowser: MediaBrowserCompat? = null
-    var prevPlayingIndex = -1
+    private var prevPlayingIndex = -1
     lateinit var playableTrack: PlayableTrack
     lateinit var playbackList: MutableList<PlayableTrack>
 
@@ -73,8 +72,12 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
 
     private lateinit var mediaItemRecyclerView: RecyclerView
     private lateinit var dashboardProgressBar: ProgressBar
-    private lateinit var mediaItemAdapter: MediaItemAdapter
-    private val dashboardViewModel: DashboardViewModel by viewModels()
+    private lateinit var tracksAdapter: TtacksAdapter
+    private val dashboardViewModel: DashboardViewModel by viewModels {
+        DashboardViewModel.Factory(
+            showPlayerPreference
+        )
+    }
     private var mediaControllerCompatCallback = object : MediaControllerCompat.Callback() {
 
         override fun onPlaybackStateChanged(playbackState: PlaybackStateCompat) {
@@ -107,7 +110,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
                 super.onChildrenLoaded(parentId, children)
                 playbackList = children.map { it.toTrack() }.toMutableList()
                 dashboardProgressBar.hide()
-                mediaItemAdapter.setList(playbackList)
+                tracksAdapter.setList(playbackList)
             }
 
             override fun onError(parentId: String) {
@@ -172,8 +175,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
 
     override fun onResume() {
         super.onResume()
-        if (showPlayerPreference.hasPlayedTrack())
-            showPlayer()
+        dashboardViewModel.checkPlayerStatus()
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -199,10 +201,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String) {
-        Timber.d("Pref changed ${showPlayerPreference.hasPlayedTrack()}")
-        if (showPlayerPreference.hasPlayedTrack()) {
-            showPlayer()
-        }
+        dashboardViewModel.checkPlayerStatus()
     }
 
     private fun initViews() {
@@ -214,42 +213,30 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         playNextButton = findViewById(R.id.play_next_button)
         artImageView = findViewById(R.id.album_art_image_view)
         nowPlayingCard = findViewById(R.id.now_playing_card)
-        mediaItemAdapter = MediaItemAdapter { id, currentlyPlayingIndex, track ->
-            if (prevPlayingIndex != -1) {
-                //Remove Icon from previous and set to new
-                dashboardViewModel.setNowPlayingStatus(
-                    Pair(
-                        Pair(prevPlayingIndex, false),
-                        Pair(currentlyPlayingIndex, true)
-                    )
-                )
-
-            } else {
-                dashboardViewModel.setNowPlayingStatus(
-                    Pair(
-                        Pair(-1, false),
-                        Pair(currentlyPlayingIndex, true)
-                    )
-                )
-            }
+        tracksAdapter = TtacksAdapter { id, currentlyPlayingIndex, track ->
+            val playbackStatus = PlaybackStatus(prevPlayingIndex, currentlyPlayingIndex)
+            dashboardViewModel.setNowPlayingStatus(playbackStatus)
+            //Update to Current Track
             prevPlayingIndex = currentlyPlayingIndex
             playableTrack = track
-            if (!showPlayerPreference.hasPlayedTrack())
-                showPlayerPreference.setHasPlayedTrack()
+
+            dashboardViewModel.setPlayerActive()
+
             mediaTranspotControls?.playFromMediaId(id, null)
         }
-        mediaItemRecyclerView.adapter = mediaItemAdapter
+        mediaItemRecyclerView.adapter = tracksAdapter
 
         observeNowPlayingIcon()
+        observePlayerActivity()
     }
 
     private fun observeNowPlayingIcon() {
-        dashboardViewModel.nowPlayingStatus.observe(this, Observer { prevNext ->
-            if (prevNext.first.first != -1) {
-                mediaItemAdapter.updateIsPlaying(prevNext.first.first, prevNext.first.second)
-                mediaItemAdapter.updateIsPlaying(prevNext.second.first, prevNext.second.second)
+        dashboardViewModel.playbackStatus.observe(this, Observer { playbackStatus ->
+            if (playbackStatus.prevTrackIndex != -1) {
+                tracksAdapter.updateIsPlaying(playbackStatus.prevTrackIndex, false)
+                tracksAdapter.updateIsPlaying(playbackStatus.currentTrackIndex, true)
             } else {
-                mediaItemAdapter.updateIsPlaying(prevNext.second.first, prevNext.second.second)
+                tracksAdapter.updateIsPlaying(playbackStatus.currentTrackIndex, true)
             }
         })
     }
@@ -266,10 +253,13 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         })
     }
 
-    private fun showPlayer() {
-        if (nowPlayingCard.visibility == View.GONE) {
-            nowPlayingCard.show()
-        }
+    private fun observePlayerActivity() {
+        dashboardViewModel.playerActive.observe(this, Observer { isActive ->
+            if (isActive)
+                nowPlayingCard.show()
+            else
+                nowPlayingCard.hide()
+        })
     }
 
     private fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {

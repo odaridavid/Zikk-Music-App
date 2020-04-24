@@ -20,17 +20,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
-import com.github.odaridavid.zikk.PlayableTrack
 import com.github.odaridavid.zikk.R
+import com.github.odaridavid.zikk.mappers.PlayableTrack
 import com.github.odaridavid.zikk.utils.invisible
 import com.github.odaridavid.zikk.utils.show
-import timber.log.Timber
 
 
-internal class MediaItemAdapter(
-    val onClick: (String?, Int, PlayableTrack) -> Unit
-) :
-    RecyclerView.Adapter<MediaItemAdapter.TrackViewHolder>() {
+internal class TtacksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit) :
+    RecyclerView.Adapter<TtacksAdapter.TrackViewHolder>() {
 
     private lateinit var mediaItems: MutableList<PlayableTrack>
 
@@ -54,8 +51,6 @@ internal class MediaItemAdapter(
         position: Int,
         payloads: MutableList<Any>
     ) {
-
-        Timber.d("Payloads called")
         if (payloads.isEmpty())
             super.onBindViewHolder(holder, position, payloads)
         else
@@ -64,6 +59,8 @@ internal class MediaItemAdapter(
 
 
     inner class TrackViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
+
+        private val nowPlayingImageView: ImageView = view.findViewById(R.id.track_now_playing_image_view)
 
         fun bind(mediaItem: PlayableTrack) {
             with(view) {
@@ -77,11 +74,8 @@ internal class MediaItemAdapter(
                 findViewById<TextView>(R.id.track_artist_text_view).apply {
                     text = mediaItem.artist
                 }
-                val showPlaying = findViewById<ImageView>(R.id.track_now_playing_image_view)
-                if (mediaItem.isPlaying)
-                    showPlaying.show()
-                else
-                    showPlaying.invisible()
+
+                setNowPlayingViewVisibility(mediaItem.isPlaying, nowPlayingImageView)
 
                 setOnClickListener {
                     onClick(mediaItem.mediaId, adapterPosition, mediaItems[adapterPosition])
@@ -90,25 +84,22 @@ internal class MediaItemAdapter(
         }
 
         fun setIsPlaying(isPlaying: Boolean) {
-            val showPlaying = view.findViewById<ImageView>(R.id.track_now_playing_image_view)
-            if (isPlaying) {
-                Timber.d("Is Playing")
+            setNowPlayingViewVisibility(isPlaying, nowPlayingImageView)
+        }
+
+        private fun setNowPlayingViewVisibility(isPlaying: Boolean, showPlaying: ImageView) {
+            if (isPlaying)
                 showPlaying.show()
-            } else {
+            else
                 showPlaying.invisible()
-            }
         }
     }
 
-
     override fun getItemCount(): Int {
-        return if (::mediaItems.isInitialized)
-            mediaItems.size
-        else 0
+        return if (::mediaItems.isInitialized) mediaItems.size else 0
     }
 
-    fun updateIsPlaying(position: Int,payload:Any){
-        notifyItemChanged(position,payload)
+    fun updateIsPlaying(position: Int, payload: Any) {
+        notifyItemChanged(position, payload)
     }
-
 }

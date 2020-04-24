@@ -21,13 +21,13 @@ import javax.inject.Inject
  */
 internal class ShowPlayerPreference @Inject constructor(private val sharedPreferences: SharedPreferences) {
 
-    fun setHasPlayedTrack() {
+    fun setHasPlayedTrackBefore() {
         val editor = sharedPreferences.edit()
         editor.putBoolean(KEY_HAS_PLAYED_TRACK, true)
         editor.apply()
     }
 
-    fun hasPlayedTrack(): Boolean {
+    fun hasPlayedTrackBefore(): Boolean {
         return sharedPreferences.getBoolean(KEY_HAS_PLAYED_TRACK, false)
     }
 

@@ -16,28 +16,54 @@ package com.github.odaridavid.zikk.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import timber.log.Timber
+import androidx.lifecycle.ViewModelProvider
+import com.github.odaridavid.zikk.data.ShowPlayerPreference
+import com.github.odaridavid.zikk.models.PlaybackStatus
 
-internal class DashboardViewModel : ViewModel() {
+internal class DashboardViewModel(private val showPlayerPreference: ShowPlayerPreference) :
+    ViewModel() {
 
     private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
     val isMediaBrowserConnected: LiveData<Boolean>
         get() = _isMediaBrowserConnected
 
+    private val _playbackStatus = MutableLiveData<PlaybackStatus>()
+    val playbackStatus: LiveData<PlaybackStatus>
+        get() = _playbackStatus
+
+    private val _playerActive = MutableLiveData<Boolean>()
+    val playerActive: LiveData<Boolean>
+        get() = _playerActive
+
+    init {
+        _playerActive.value = showPlayerPreference.hasPlayedTrackBefore()
+    }
+
     fun setIsConnected(value: Boolean) {
         _isMediaBrowserConnected.value = value
     }
 
-    private val _nowPlayingStatus =
-        MutableLiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>()
-    val nowPlayingStatus: LiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>
-        get() = _nowPlayingStatus
-
-    fun setNowPlayingStatus(prevAndNextTrack: Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>) {
-        Timber.d("Value Set")
-        _nowPlayingStatus.value = prevAndNextTrack
+    fun setNowPlayingStatus(playbackStatus: PlaybackStatus) {
+        _playbackStatus.value = playbackStatus
     }
 
+    fun setPlayerActive() {
+        showPlayerPreference.setHasPlayedTrackBefore()
+        checkPlayerStatus()
+    }
 
+    fun checkPlayerStatus() {
+        _playerActive.value = showPlayerPreference.hasPlayedTrackBefore()
+    }
+
+    class Factory(
+        private val showPlayerPreference: ShowPlayerPreference
+    ) : ViewModelProvider.NewInstanceFactory() {
+
+        @Suppress("unchecked_cast")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return DashboardViewModel(showPlayerPreference) as T
+        }
+    }
 }
 
