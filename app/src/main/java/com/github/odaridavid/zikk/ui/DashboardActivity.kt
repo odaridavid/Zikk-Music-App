@@ -14,8 +14,9 @@ package com.github.odaridavid.zikk.ui
  *
  **/
 import android.content.ComponentName
+import android.content.Intent
+import android.content.SharedPreferences
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -27,59 +28,43 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.cardview.widget.CardView
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
+import com.github.odaridavid.zikk.PlayableTrack
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
+import com.github.odaridavid.zikk.data.ShowPlayerPreference
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
+import com.github.odaridavid.zikk.toTrack
 import com.github.odaridavid.zikk.utils.*
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
-import kotlinx.android.synthetic.main.activity_dashboard.*
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Main screen on app launch
  *
  */
-internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
+internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
-    //TODO DI and Code Cleanup on bloated callbacks in activity
-    //TODO Show player if a song has been played before
+    @Inject
+    lateinit var showPlayerPreference: ShowPlayerPreference
+
+    @Inject
+    lateinit var sharedPreferences: SharedPreferences
+
     private var mediaBrowser: MediaBrowserCompat? = null
-
-    // Media controller callback receives updates of state changes from the active media session
-    private var mediaControllerCompatCallback = object : MediaControllerCompat.Callback() {
-
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            super.onPlaybackStateChanged(state)
-            requireNotNull(state)
-            when (state.state) {
-                PlaybackStateCompat.STATE_PLAYING -> {
-                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
-                }
-                PlaybackStateCompat.STATE_PAUSED -> {
-                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
-                }
-            }
-        }
-
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            super.onMetadataChanged(metadata)
-            //TODO Check if is first time or if track recently played and load metadata from room or shared pref
-            //TODO Show currently playing track in session
-            if (now_playing_card.visibility == View.GONE) {
-                now_playing_card.show()
-            }
-            val metadataDesc = metadata?.description
-            trackTitleTextView.text = metadataDesc?.title ?: ""
-            trackArtistTextView.text = metadataDesc?.subtitle ?: ""
-            artImageView.load(metadataDesc?.iconUri ?: Uri.parse(""))
-        }
-    }
+    var prevPlayingIndex = -1
+    lateinit var playableTrack: PlayableTrack
+    lateinit var playbackList: MutableList<PlayableTrack>
 
     //MediaPlayer UI
+    private lateinit var nowPlayingCard: CardView
     private lateinit var trackArtistTextView: TextView
     private lateinit var trackTitleTextView: TextView
     private lateinit var playPauseButton: ImageButton
@@ -90,12 +75,93 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
     private lateinit var dashboardProgressBar: ProgressBar
     private lateinit var mediaItemAdapter: MediaItemAdapter
     private val dashboardViewModel: DashboardViewModel by viewModels()
+    private var mediaControllerCompatCallback = object : MediaControllerCompat.Callback() {
+
+        override fun onPlaybackStateChanged(playbackState: PlaybackStateCompat) {
+            super.onPlaybackStateChanged(playbackState)
+            when (playbackState.state) {
+                PlaybackStateCompat.STATE_PLAYING -> {
+                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
+                }
+                PlaybackStateCompat.STATE_PAUSED -> {
+                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
+                }
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadataCompat) {
+            super.onMetadataChanged(metadata)
+            trackTitleTextView.text = metadata.title
+            trackArtistTextView.text = metadata.artist
+            artImageView.load(metadata.albumArtUri)
+        }
+    }
+
+    private val mediaBrowserSubscriptionCallback =
+        object : MediaBrowserCompat.SubscriptionCallback() {
+
+            override fun onChildrenLoaded(
+                parentId: String,
+                children: MutableList<MediaBrowserCompat.MediaItem>
+            ) {
+                super.onChildrenLoaded(parentId, children)
+                playbackList = children.map { it.toTrack() }.toMutableList()
+                dashboardProgressBar.hide()
+                mediaItemAdapter.setList(playbackList)
+            }
+
+            override fun onError(parentId: String) {
+                super.onError(parentId)
+                Timber.d("Error on $parentId")
+            }
+        }
+
+    private val mediaBrowserConnectionCallback = object : MediaBrowserCompat.ConnectionCallback() {
+
+        override fun onConnected() {
+            super.onConnected()
+            Timber.i("Connection with media browser successful")
+            dashboardViewModel.setIsConnected(true)
+            mediaBrowser?.run {
+                val mediaControllerCompat =
+                    MediaControllerCompat(this@DashboardActivity, sessionToken)
+
+                MediaControllerCompat.setMediaController(
+                    this@DashboardActivity,
+                    mediaControllerCompat
+                )
+                playPauseButton.setOnClickListener {
+                    if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
+                        mediaTranspotControls?.pause()
+                    else mediaTranspotControls?.play()
+                }
+                mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
+            }
+        }
+
+        override fun onConnectionSuspended() {
+            super.onConnectionSuspended()
+            Timber.i("Disconnected from media browser ")
+            dashboardViewModel.setIsConnected(false)
+        }
+
+        override fun onConnectionFailed() {
+            super.onConnectionFailed()
+            Timber.i("Connection with media browser failed")
+            dashboardViewModel.setIsConnected(false)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.inject(this)
         super.onCreate(savedInstanceState)
+        checkPermissionsAndInit(onPermissionNotGranted = {
+            ActivityCompat.requestPermissions(
+                this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
+            )
+        })
         initViews()
-        initMediaBrowser()
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onStart() {
@@ -106,6 +172,8 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
 
     override fun onResume() {
         super.onResume()
+        if (showPlayerPreference.hasPlayedTrack())
+            showPlayer()
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -113,6 +181,28 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
         super.onStop()
         mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
         mediaBrowser?.disconnect()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RQ_STORAGE_PERMISSIONS) {
+            checkPermissionsAndInit(onPermissionNotGranted = {
+                showToast(getString(R.string.info_storage_permissions_not_granted))
+                finish()
+            })
+        }
+    }
+
+    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String) {
+        Timber.d("Pref changed ${showPlayerPreference.hasPlayedTrack()}")
+        if (showPlayerPreference.hasPlayedTrack()) {
+            showPlayer()
+        }
     }
 
     private fun initViews() {
@@ -123,81 +213,56 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard) {
         playPauseButton = findViewById(R.id.play_pause_button)
         playNextButton = findViewById(R.id.play_next_button)
         artImageView = findViewById(R.id.album_art_image_view)
-        mediaItemAdapter = MediaItemAdapter { id ->
-            //TODO Control transport controls with viewmodel
+        nowPlayingCard = findViewById(R.id.now_playing_card)
+        mediaItemAdapter = MediaItemAdapter { id, currentlyPlayingIndex, track ->
+            if (prevPlayingIndex != -1) {
+                playbackList[prevPlayingIndex] = playableTrack.copy(isPlaying = false)
+                playbackList[currentlyPlayingIndex] = track.copy(isPlaying = true)
+                //Remove Icon from previous
+                mediaItemAdapter.notifyItemChanged(prevPlayingIndex,)
+                mediaItemAdapter.notifyItemChanged(currentlyPlayingIndex)
+
+            } else {
+                playbackList[currentlyPlayingIndex] = track.copy(isPlaying = true)
+                mediaItemAdapter.notifyItemChanged(
+                    currentlyPlayingIndex,
+                    track.copy(isPlaying = true)
+                )
+            }
+            prevPlayingIndex = currentlyPlayingIndex
+            playableTrack = track
+            if (!showPlayerPreference.hasPlayedTrack())
+                showPlayerPreference.setHasPlayedTrack()
             mediaTranspotControls?.playFromMediaId(id, null)
         }
         mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
     }
 
     private fun initMediaBrowser() {
-        //Identifier for MBS
         val cn = ComponentName(this, ZikkMediaService::class.java)
-
-        mediaBrowser =
-            MediaBrowserCompat(this, cn, object : MediaBrowserCompat.ConnectionCallback() {
-
-                override fun onConnected() {
-                    super.onConnected()
-                    Timber.i("Connection with media browser successful")
-                    dashboardViewModel.setIsConnected(true)
-                    mediaBrowser?.run {
-                        val mediaControllerCompat =
-                            MediaControllerCompat(this@DashboardActivity, sessionToken)
-
-                        MediaControllerCompat.setMediaController(
-                            this@DashboardActivity,
-                            mediaControllerCompat
-                        )
-
-                        //TODO Control with viewmodel
-                        playPauseButton.setOnClickListener {
-                            if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
-                                mediaTranspotControls?.pause()
-                            else mediaTranspotControls?.play()
-                        }
-
-                        mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
-                    }
-                }
-
-                override fun onConnectionSuspended() {
-                    super.onConnectionSuspended()
-                    dashboardViewModel.setIsConnected(false)
-                    Timber.i("Disconnected from media browser ")
-                }
-
-                override fun onConnectionFailed() {
-                    super.onConnectionFailed()
-                    dashboardViewModel.setIsConnected(false)
-                    Timber.i("Connection with media browser failed")
-                }
-            }, null)
+        mediaBrowser = MediaBrowserCompat(this, cn, mediaBrowserConnectionCallback, null)
     }
 
     private fun observeMediaBrowserConnection() {
-        //After the client connects, it can traverse the content hierarchy by making repeated calls
-        //to MediaBrowserCompat.subscribe() to build a local representation of the UI
         dashboardViewModel.isMediaBrowserConnected.observe(this, Observer { isConnected ->
             if (!isConnected) mediaBrowser?.run { unsubscribe(root) }
-            else mediaBrowser?.subscribe(
-                MediaId.TRACK.toString(), //TODO Handle different media items in their respective fragments
-                object : MediaBrowserCompat.SubscriptionCallback() {
-
-                    override fun onChildrenLoaded(
-                        parentId: String,
-                        children: MutableList<MediaBrowserCompat.MediaItem>
-                    ) {
-                        super.onChildrenLoaded(parentId, children)
-                        dashboardProgressBar.hide()
-                        mediaItemAdapter.submitList(children)
-                    }
-
-                    override fun onError(parentId: String) {
-                        super.onError(parentId)
-                        Timber.d("Error on $parentId")
-                    }
-                })
+            else mediaBrowser?.subscribe(MediaId.TRACK.toString(), mediaBrowserSubscriptionCallback)
         })
+    }
+
+    private fun showPlayer() {
+        if (nowPlayingCard.visibility == View.GONE) {
+            nowPlayingCard.show()
+        }
+    }
+
+    private fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {
+        if (!PermissionUtils.allPermissionsGranted(this, PermissionUtils.STORAGE_PERMISSIONS))
+            onPermissionNotGranted()
+        else initMediaBrowser()
+    }
+
+    companion object {
+        private const val RQ_STORAGE_PERMISSIONS = 1000
     }
 }

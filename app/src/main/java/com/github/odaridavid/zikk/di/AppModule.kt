@@ -15,7 +15,9 @@ package com.github.odaridavid.zikk.di
  **/
 import android.app.NotificationManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.AudioManager
+import com.github.odaridavid.zikk.utils.Constants
 import dagger.Module
 import dagger.Provides
 
@@ -33,5 +35,10 @@ class AppModule {
     @Provides
     fun providesAudioManager(context: Context): AudioManager {
         return context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
+
+    @Provides
+    fun providesSharedPreference(context: Context): SharedPreferences {
+        return context.getSharedPreferences(Constants.PREFERENCE_NAME, Context.MODE_PRIVATE)
     }
 }

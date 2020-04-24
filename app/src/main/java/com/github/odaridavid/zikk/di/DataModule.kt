@@ -1,4 +1,9 @@
-package com.github.odaridavid.zikk.ui
+package com.github.odaridavid.zikk.di
+
+import android.content.SharedPreferences
+import com.github.odaridavid.zikk.data.ShowPlayerPreference
+import dagger.Module
+import dagger.Provides
 
 /**
  *
@@ -13,19 +18,11 @@ package com.github.odaridavid.zikk.ui
  * the License.
  *
  **/
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+@Module
+internal class DataModule {
 
-internal class DashboardViewModel : ViewModel() {
-
-    private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
-    val isMediaBrowserConnected: LiveData<Boolean>
-        get() = _isMediaBrowserConnected
-
-    fun setIsConnected(value: Boolean) {
-        _isMediaBrowserConnected.value = value
+    @Provides
+    fun providesCurrentlyPlayingSharedPreference(sharedPreferences: SharedPreferences):ShowPlayerPreference{
+        return ShowPlayerPreference(sharedPreferences)
     }
-
 }
-

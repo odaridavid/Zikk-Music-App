@@ -30,10 +30,10 @@
         <ImageView
             android:id="@+id/track_art_image_view"
             android:layout_width="@dimen/song_art_width"
-            android:scaleType="fitXY"
             android:layout_height="@dimen/song_art_height"
             android:background="@drawable/bg_no_art"
             android:contentDescription="Music Art"
+            android:scaleType="fitXY"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -48,7 +48,7 @@
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textStyle="bold"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/track_duration_text_view"
+            app:layout_constraintEnd_toStartOf="@+id/track_now_playing_image_view"
             app:layout_constraintStart_toEndOf="@id/track_art_image_view"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Lifes Good Man" />
@@ -61,23 +61,24 @@
             android:ellipsize="end"
             android:maxLines="1"
             app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/track_duration_text_view"
+            app:layout_constraintEnd_toStartOf="@+id/track_now_playing_image_view"
             app:layout_constraintStart_toEndOf="@id/track_art_image_view"
             app:layout_constraintTop_toBottomOf="@id/track_title_text_view"
             tools:text="The Cow" />
 
-        <TextView
-            android:id="@+id/track_duration_text_view"
+        <!-- TODO Use animated vector drawable to show playing status-->
+        <ImageView
+            android:id="@+id/track_now_playing_image_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/small_margin"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:tint="@color/colorAccent"
+            android:visibility="invisible"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="1:28" />
+            android:src="@drawable/ic_now_playing_black_24dp" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

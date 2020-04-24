@@ -13,23 +13,31 @@ package com.github.odaridavid.zikk.ui;
  * the License.
  *
  **/
-import android.support.v4.media.MediaBrowserCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
+import com.github.odaridavid.zikk.PlayableTrack
 import com.github.odaridavid.zikk.R
+import com.github.odaridavid.zikk.utils.invisible
+import com.github.odaridavid.zikk.utils.show
+import timber.log.Timber
 
 
-internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
-    ListAdapter<MediaBrowserCompat.MediaItem, MediaItemAdapter.TrackViewHolder>(
-        TrackDiffUtil
-    ) {
+internal class MediaItemAdapter(
+    val onClick: (String?, Int, PlayableTrack) -> Unit
+) :
+    RecyclerView.Adapter<MediaItemAdapter.TrackViewHolder>() {
+
+    private lateinit var mediaItems: MutableList<PlayableTrack>
+
+    fun setList(mediaItem: MutableList<PlayableTrack>) {
+        mediaItems = mediaItem
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
         val context = parent.context
@@ -37,44 +45,44 @@ internal class MediaItemAdapter(val onClick: (String?) -> Unit) :
         return TrackViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: TrackViewHolder, position: Int): Unit =
-        getItem(position).let { holder.bind(it) }
+    override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
+        holder.bind(mediaItems[position])
+    }
+
 
     inner class TrackViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
 
-        fun bind(mediaItem: MediaBrowserCompat.MediaItem) {
+        fun bind(mediaItem: PlayableTrack) {
             with(view) {
                 findViewById<ImageView>(R.id.track_art_image_view).apply {
-                    this.load(mediaItem.description.iconUri)
-                    contentDescription = "${mediaItem.description.title} Album Art"
-
+                    this.load(mediaItem.icon)
+                    contentDescription = "${mediaItem.title} Album Art"
                 }
                 findViewById<TextView>(R.id.track_title_text_view).apply {
-                    text = mediaItem.description.title
+                    text = mediaItem.title
                 }
                 findViewById<TextView>(R.id.track_artist_text_view).apply {
-                    text = mediaItem.description.subtitle
+                    text = mediaItem.artist
                 }
-                setOnClickListener { onClick(mediaItem.mediaId) }
+                val showPlaying = findViewById<ImageView>(R.id.track_now_playing_image_view)
+                if (mediaItem.isPlaying) {
+                    Timber.d("Is Playing")
+                    showPlaying.show()
+                } else {
+                    showPlaying.invisible()
+                }
+                setOnClickListener {
+                    onClick(mediaItem.mediaId, adapterPosition, mediaItems[adapterPosition])
+                }
             }
         }
     }
 
-    companion object {
-        val TrackDiffUtil = object : DiffUtil.ItemCallback<MediaBrowserCompat.MediaItem>() {
-            override fun areItemsTheSame(
-                oldItem: MediaBrowserCompat.MediaItem,
-                newItem: MediaBrowserCompat.MediaItem
-            ): Boolean {
-                return oldItem == newItem
-            }
 
-            override fun areContentsTheSame(
-                oldItem: MediaBrowserCompat.MediaItem,
-                newItem: MediaBrowserCompat.MediaItem
-            ): Boolean {
-                return oldItem.description.mediaId == newItem.description.mediaId
-            }
-        }
+    override fun getItemCount(): Int {
+        return if (::mediaItems.isInitialized)
+            mediaItems.size
+        else 0
     }
+
 }

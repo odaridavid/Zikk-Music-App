@@ -1,4 +1,7 @@
-package com.github.odaridavid.zikk.ui
+package com.github.odaridavid.zikk
+
+import android.net.Uri
+import android.support.v4.media.MediaBrowserCompat
 
 /**
  *
@@ -13,19 +16,19 @@ package com.github.odaridavid.zikk.ui
  * the License.
  *
  **/
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-
-internal class DashboardViewModel : ViewModel() {
-
-    private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
-    val isMediaBrowserConnected: LiveData<Boolean>
-        get() = _isMediaBrowserConnected
-
-    fun setIsConnected(value: Boolean) {
-        _isMediaBrowserConnected.value = value
-    }
-
+fun MediaBrowserCompat.MediaItem.toTrack(): PlayableTrack {
+    return PlayableTrack(
+        this.mediaId,
+        this.description.title.toString(),
+        this.description.subtitle.toString(),
+        this.description.iconUri
+    )
 }
 
+data class PlayableTrack(
+    val mediaId: String?,
+    val title: String?,
+    val artist: String,
+    val icon: Uri?,
+    val isPlaying: Boolean = false
+)
