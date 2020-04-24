@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk
+package com.github.odaridavid.zikk.mappers
 
 import android.net.Uri
 import android.support.v4.media.MediaBrowserCompat
