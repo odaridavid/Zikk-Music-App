@@ -13,50 +13,31 @@ package com.github.odaridavid.zikk.ui
  * the License.
  *
  **/
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import timber.log.Timber
 
 internal class DashboardViewModel : ViewModel() {
-
-    private val _nowPlaying = MutableLiveData<MediaMetadataCompat>()
-    val nowPlaying: LiveData<MediaMetadataCompat>
-        get() = _nowPlaying
-
-    private val _playbackState = MutableLiveData<PlaybackStateCompat>()
-    val playbackState: LiveData<PlaybackStateCompat>
-        get() = _playbackState
 
     private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
     val isMediaBrowserConnected: LiveData<Boolean>
         get() = _isMediaBrowserConnected
 
-    init {
-        //TODO Save last played track info and load on initialisation
-        //Defaults
-        _nowPlaying.value = MediaMetadataCompat.Builder()
-            .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "")
-            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 0)
-            .build()
-
-        _playbackState.value = PlaybackStateCompat.Builder()
-            .setState(PlaybackStateCompat.STATE_NONE, 0, 0f)
-            .build()
-    }
-
-    fun setPlaybackState(state: PlaybackStateCompat) {
-        _playbackState.value = state
-    }
-
-    fun setNowPlayingMetadata(mediaMetadataCompat: MediaMetadataCompat) {
-        _nowPlaying.value = mediaMetadataCompat
-    }
-
     fun setIsConnected(value: Boolean) {
         _isMediaBrowserConnected.value = value
     }
+
+    private val _nowPlayingStatus =
+        MutableLiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>()
+    val nowPlayingStatus: LiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>
+        get() = _nowPlayingStatus
+
+    fun setNowPlayingStatus(prevAndNextTrack: Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>) {
+        Timber.d("Value Set")
+        _nowPlayingStatus.value = prevAndNextTrack
+    }
+
 
 }
 

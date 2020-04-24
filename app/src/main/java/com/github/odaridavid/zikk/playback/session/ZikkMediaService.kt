@@ -94,9 +94,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
         )
     }
 
-
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Timber.d("On start command : ${intent.action}")
         MediaButtonReceiver.handleIntent(mediaSessionCompat, intent)
         return START_STICKY
     }

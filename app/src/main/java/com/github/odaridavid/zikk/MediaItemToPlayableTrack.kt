@@ -1,4 +1,7 @@
-package com.github.odaridavid.zikk.utils
+package com.github.odaridavid.zikk
+
+import android.net.Uri
+import android.support.v4.media.MediaBrowserCompat
 
 /**
  *
@@ -13,7 +16,19 @@ package com.github.odaridavid.zikk.utils
  * the License.
  *
  **/
-object Constants {
-    const val PLAYBACK_NOTIFICATION_ID = 1000
-    const val PREFERENCE_NAME = "zikk_preferences"
+fun MediaBrowserCompat.MediaItem.toTrack(): PlayableTrack {
+    return PlayableTrack(
+        this.mediaId,
+        this.description.title.toString(),
+        this.description.subtitle.toString(),
+        this.description.iconUri
+    )
 }
+
+data class PlayableTrack(
+    val mediaId: String?,
+    val title: String?,
+    val artist: String,
+    val icon: Uri?,
+    val isPlaying: Boolean = false
+)

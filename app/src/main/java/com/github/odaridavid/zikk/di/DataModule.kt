@@ -1,4 +1,9 @@
-package com.github.odaridavid.zikk.utils
+package com.github.odaridavid.zikk.di
+
+import android.content.SharedPreferences
+import com.github.odaridavid.zikk.data.ShowPlayerPreference
+import dagger.Module
+import dagger.Provides
 
 /**
  *
@@ -13,7 +18,11 @@ package com.github.odaridavid.zikk.utils
  * the License.
  *
  **/
-object Constants {
-    const val PLAYBACK_NOTIFICATION_ID = 1000
-    const val PREFERENCE_NAME = "zikk_preferences"
+@Module
+internal class DataModule {
+
+    @Provides
+    fun providesCurrentlyPlayingSharedPreference(sharedPreferences: SharedPreferences):ShowPlayerPreference{
+        return ShowPlayerPreference(sharedPreferences)
+    }
 }
