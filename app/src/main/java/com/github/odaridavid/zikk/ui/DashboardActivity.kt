@@ -216,17 +216,20 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         nowPlayingCard = findViewById(R.id.now_playing_card)
         mediaItemAdapter = MediaItemAdapter { id, currentlyPlayingIndex, track ->
             if (prevPlayingIndex != -1) {
-                playbackList[prevPlayingIndex] = playableTrack.copy(isPlaying = false)
-                playbackList[currentlyPlayingIndex] = track.copy(isPlaying = true)
-                //Remove Icon from previous
-                mediaItemAdapter.notifyItemChanged(prevPlayingIndex,)
-                mediaItemAdapter.notifyItemChanged(currentlyPlayingIndex)
+                //Remove Icon from previous and set to new
+                dashboardViewModel.setNowPlayingStatus(
+                    Pair(
+                        Pair(prevPlayingIndex, false),
+                        Pair(currentlyPlayingIndex, true)
+                    )
+                )
 
             } else {
-                playbackList[currentlyPlayingIndex] = track.copy(isPlaying = true)
-                mediaItemAdapter.notifyItemChanged(
-                    currentlyPlayingIndex,
-                    track.copy(isPlaying = true)
+                dashboardViewModel.setNowPlayingStatus(
+                    Pair(
+                        Pair(-1, false),
+                        Pair(currentlyPlayingIndex, true)
+                    )
                 )
             }
             prevPlayingIndex = currentlyPlayingIndex
@@ -235,7 +238,20 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
                 showPlayerPreference.setHasPlayedTrack()
             mediaTranspotControls?.playFromMediaId(id, null)
         }
-        mediaItemRecyclerView.adapter = ScaleInAnimationAdapter(mediaItemAdapter)
+        mediaItemRecyclerView.adapter = mediaItemAdapter
+
+        observeNowPlayingIcon()
+    }
+
+    private fun observeNowPlayingIcon() {
+        dashboardViewModel.nowPlayingStatus.observe(this, Observer { prevNext ->
+            if (prevNext.first.first != -1) {
+                mediaItemAdapter.updateIsPlaying(prevNext.first.first, prevNext.first.second)
+                mediaItemAdapter.updateIsPlaying(prevNext.second.first, prevNext.second.second)
+            } else {
+                mediaItemAdapter.updateIsPlaying(prevNext.second.first, prevNext.second.second)
+            }
+        })
     }
 
     private fun initMediaBrowser() {

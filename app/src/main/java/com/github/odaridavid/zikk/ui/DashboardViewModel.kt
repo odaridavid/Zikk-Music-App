@@ -16,6 +16,7 @@ package com.github.odaridavid.zikk.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import timber.log.Timber
 
 internal class DashboardViewModel : ViewModel() {
 
@@ -26,6 +27,17 @@ internal class DashboardViewModel : ViewModel() {
     fun setIsConnected(value: Boolean) {
         _isMediaBrowserConnected.value = value
     }
+
+    private val _nowPlayingStatus =
+        MutableLiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>()
+    val nowPlayingStatus: LiveData<Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>>
+        get() = _nowPlayingStatus
+
+    fun setNowPlayingStatus(prevAndNextTrack: Pair<Pair<Int, Boolean>, Pair<Int, Boolean>>) {
+        Timber.d("Value Set")
+        _nowPlayingStatus.value = prevAndNextTrack
+    }
+
 
 }
 

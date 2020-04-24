@@ -49,6 +49,19 @@ internal class MediaItemAdapter(
         holder.bind(mediaItems[position])
     }
 
+    override fun onBindViewHolder(
+        holder: TrackViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+
+        Timber.d("Payloads called")
+        if (payloads.isEmpty())
+            super.onBindViewHolder(holder, position, payloads)
+        else
+            holder.setIsPlaying(payloads[0] as Boolean)
+    }
+
 
     inner class TrackViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
 
@@ -65,15 +78,24 @@ internal class MediaItemAdapter(
                     text = mediaItem.artist
                 }
                 val showPlaying = findViewById<ImageView>(R.id.track_now_playing_image_view)
-                if (mediaItem.isPlaying) {
-                    Timber.d("Is Playing")
+                if (mediaItem.isPlaying)
                     showPlaying.show()
-                } else {
+                else
                     showPlaying.invisible()
-                }
+
                 setOnClickListener {
                     onClick(mediaItem.mediaId, adapterPosition, mediaItems[adapterPosition])
                 }
+            }
+        }
+
+        fun setIsPlaying(isPlaying: Boolean) {
+            val showPlaying = view.findViewById<ImageView>(R.id.track_now_playing_image_view)
+            if (isPlaying) {
+                Timber.d("Is Playing")
+                showPlaying.show()
+            } else {
+                showPlaying.invisible()
             }
         }
     }
@@ -83,6 +105,10 @@ internal class MediaItemAdapter(
         return if (::mediaItems.isInitialized)
             mediaItems.size
         else 0
+    }
+
+    fun updateIsPlaying(position: Int,payload:Any){
+        notifyItemChanged(position,payload)
     }
 
 }
