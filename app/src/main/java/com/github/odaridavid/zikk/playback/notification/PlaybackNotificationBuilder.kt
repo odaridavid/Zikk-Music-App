@@ -14,19 +14,20 @@ package com.github.odaridavid.zikk.playback.notification
  *
  **/
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.utils.*
+import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
+import com.github.odaridavid.zikk.utils.album
+import com.github.odaridavid.zikk.utils.albumArt
+import com.github.odaridavid.zikk.utils.artist
+import com.github.odaridavid.zikk.utils.title
 import javax.inject.Inject
 
 /**
@@ -39,9 +40,6 @@ internal class PlaybackNotificationBuilder @Inject constructor(
 ) {
 
     fun build(): Notification {
-
-        if (versionFrom(Build.VERSION_CODES.O) && !hasPlaybackChannel())
-            createPlaybackNotificationChannel()
 
         val mediaMetadata = mediaSessionCompat.controller.metadata
 
@@ -113,24 +111,4 @@ internal class PlaybackNotificationBuilder @Inject constructor(
         return notification
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createPlaybackNotificationChannel() {
-        val name = context.getString(R.string.notification_playback_channel_name)
-        val descriptionText =
-            context.getString(R.string.notification_playback_channel_description)
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val channel = NotificationChannel(PLAYBACK_CHANNEL_ID, name, importance).apply {
-            description = descriptionText
-        }
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun hasPlaybackChannel(): Boolean {
-        return notificationManager.getNotificationChannel(PLAYBACK_CHANNEL_ID) != null
-    }
-
-    companion object {
-        private const val PLAYBACK_CHANNEL_ID = "playback"
-    }
 }

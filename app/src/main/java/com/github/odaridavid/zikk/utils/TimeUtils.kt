@@ -1,7 +1,5 @@
 package com.github.odaridavid.zikk.utils
 
-import java.util.concurrent.TimeUnit
-
 /**
  *
  * Copyright 2020 David Odari
@@ -15,6 +13,11 @@ import java.util.concurrent.TimeUnit
  * the License.
  *
  **/
+import java.util.concurrent.TimeUnit
+
+/**
+ * Converts a long to a duration representatioin e.g 3:19,01:00:00
+ */
 fun convertMillisecondsToDuration(millis: Long): String {
     val hrs = TimeUnit.MILLISECONDS.toHours(millis)
     val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1)
