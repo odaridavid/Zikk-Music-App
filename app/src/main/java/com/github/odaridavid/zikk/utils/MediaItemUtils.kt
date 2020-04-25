@@ -43,3 +43,8 @@ fun getDrawableUri(context: Context, drawableName: String): Uri {
     val appPackageName = context.packageName
     return Uri.parse("android.resource://$appPackageName/drawable/$drawableName")
 }
+
+fun convertMediaIdToTrackId(mediaId: String): Long {
+    val spIndex = mediaId.indexOf('-')
+    return mediaId.substring(spIndex + 1).toLong()
+}

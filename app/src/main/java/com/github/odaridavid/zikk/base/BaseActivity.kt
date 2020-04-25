@@ -3,15 +3,23 @@ package com.github.odaridavid.zikk.base
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
+import com.github.odaridavid.zikk.notification.NotificationsChannelManager
+import com.github.odaridavid.zikk.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
+import com.github.odaridavid.zikk.utils.injector
 import com.github.odaridavid.zikk.utils.versionFrom
+import javax.inject.Inject
 
-internal abstract class BaseActivity(@LayoutRes layout: Int) : AppCompatActivity(layout) {
+internal abstract class BaseActivity : AppCompatActivity() {
+    @Inject
+    lateinit var notificationsChannelManager: NotificationsChannelManager
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         matchStatusBarWithBackground()
+        injector.inject(this)
         super.onCreate(savedInstanceState)
+        initNotificationChannel()
     }
 
     private fun matchStatusBarWithBackground() {
@@ -21,5 +29,10 @@ internal abstract class BaseActivity(@LayoutRes layout: Int) : AppCompatActivity
         }
     }
 
-
+    private fun initNotificationChannel() {
+        with(notificationsChannelManager) {
+            if (versionFrom(Build.VERSION_CODES.O) && !hasChannel(PLAYBACK_CHANNEL_ID))
+                createNotificationChannel(PLAYBACK_CHANNEL_ID)
+        }
+    }
 }

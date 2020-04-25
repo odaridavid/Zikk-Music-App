@@ -26,12 +26,11 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
-import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.utils.injector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 

@@ -19,19 +19,20 @@ import javax.inject.Inject
 /**
  * Used to show or hide the player if no track has ever been played since install
  */
-internal class ShowPlayerPreference @Inject constructor(private val sharedPreferences: SharedPreferences) {
+internal class LastPlayedTrackPreference @Inject constructor(private val sharedPreferences: SharedPreferences) {
 
-    fun setHasPlayedTrackBefore() {
+    fun setLastPlayedTrackId(trackId: Long) {
         val editor = sharedPreferences.edit()
-        editor.putBoolean(KEY_HAS_PLAYED_TRACK, true)
+        editor.putLong(KEY_LAST_PLAYED_TRACK_ID, trackId)
         editor.apply()
     }
 
-    fun hasPlayedTrackBefore(): Boolean {
-        return sharedPreferences.getBoolean(KEY_HAS_PLAYED_TRACK, false)
+    fun getLastPlayedTrackId(): Long {
+        return sharedPreferences.getLong(KEY_LAST_PLAYED_TRACK_ID, DEFAULT_VALUE)
     }
 
     companion object {
-        const val KEY_HAS_PLAYED_TRACK = "has_played"
+        private const val KEY_LAST_PLAYED_TRACK_ID = "last_played_id"
+        private const val DEFAULT_VALUE = -1L
     }
 }

@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.mappers
+package com.github.odaridavid.zikk.models
 
 /**
  *
@@ -13,15 +13,15 @@ package com.github.odaridavid.zikk.mappers
  * the License.
  *
  **/
-import android.support.v4.media.MediaBrowserCompat
-import com.github.odaridavid.zikk.models.PlayableTrack
+import android.net.Uri
 
-
-fun MediaBrowserCompat.MediaItem.toTrack(): PlayableTrack {
-    return PlayableTrack(
-        this.mediaId,
-        this.description.title.toString(),
-        this.description.subtitle.toString(),
-        this.description.iconUri
-    )
-}
+/**
+ * Track displayed on the UI
+ */
+data class PlayableTrack(
+    val mediaId: String?,
+    val title: String?,
+    val artist: String,
+    val icon: Uri?,
+    val isPlaying: Boolean = false
+)

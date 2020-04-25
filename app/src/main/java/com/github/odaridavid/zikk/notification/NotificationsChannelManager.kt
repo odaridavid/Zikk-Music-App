@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.playback.notification
+package com.github.odaridavid.zikk.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
