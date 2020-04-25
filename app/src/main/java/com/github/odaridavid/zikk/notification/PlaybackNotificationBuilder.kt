@@ -63,7 +63,6 @@ internal class PlaybackNotificationBuilder @Inject constructor(
 
                 setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-                //TODO Replace with app icon
                 setSmallIcon(R.drawable.ic_music_note_black_24dp)
                 color = ContextCompat.getColor(context, R.color.colorAccent)
 

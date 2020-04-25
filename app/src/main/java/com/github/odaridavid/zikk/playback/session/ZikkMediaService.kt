@@ -25,11 +25,12 @@ import android.support.v4.media.session.PlaybackStateCompat.*
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
 import com.github.odaridavid.zikk.models.MediaId
-import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.utils.injector
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +40,8 @@ import javax.inject.Inject
  * browser attached through the media player.
  * @see <a href="Media App Architecture">https://developer.android.com/guide/topics/media-apps/media-apps-overview</a>
  */
-internal class ZikkMediaService : MediaBrowserServiceCompat() {
+internal class ZikkMediaService : MediaBrowserServiceCompat(),
+    CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     private lateinit var mediaSessionCompat: MediaSessionCompat
     private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
@@ -63,7 +65,6 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
         mediaSessionCompat = createMediaSession()
         mediaSessionCompat.isActive = true
 
-        //TODO Launch a now playing activity with playing item metadata
         val sessionActivityPendingIntent =
             packageManager?.getLaunchIntentForPackage(packageName)?.let { sessionIntent ->
                 PendingIntent.getActivity(this, 0, sessionIntent, 0)
@@ -119,10 +120,8 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
             mediaLoader.buildMediaCategories(mediaItems)
             result.sendResult(mediaItems)
         } else {
-
             result.detach()
-            //TODO Create coroutine scope that is cancelable and launch work in scope
-            GlobalScope.launch(Dispatchers.IO) {
+            launch {
                 val mediaItemId = MediaId.values().find { id -> id.toString() == parentId }
                 mediaLoader.getMediaItemChildren(mediaItems, mediaItemId)
                 result.sendResult(mediaItems)
@@ -143,6 +142,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat() {
 
     override fun onDestroy() {
         super.onDestroy()
+        this.cancel()
         mediaSessionCompat.isActive = false
         trackPlayer.release()
         mediaSessionCompat.release()

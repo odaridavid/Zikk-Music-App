@@ -114,23 +114,16 @@ internal class MediaSessionCallback(
         setPlaybackState(state)
     }
 
-    override fun onSkipToNext() {
-        super.onSkipToNext()
-        //TODO Skip to next implementation
-    }
-
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                //TODO Switch Implementation to Reduce Volume
                 trackPlayer.pause()
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
                 releaseAudioFocus()
-                trackPlayer.stop()
+                trackPlayer.pause()
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
-                //TODO Switch Implementation to Increase volume
                 trackPlayer.start()
             }
         }

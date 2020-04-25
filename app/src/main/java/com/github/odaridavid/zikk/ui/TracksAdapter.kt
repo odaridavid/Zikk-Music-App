@@ -25,7 +25,6 @@ import com.github.odaridavid.zikk.models.PlayableTrack
 import com.github.odaridavid.zikk.utils.invisible
 import com.github.odaridavid.zikk.utils.show
 
-//TODO Refactor back to list adapter
 internal class TracksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit) :
     RecyclerView.Adapter<TracksAdapter.TrackViewHolder>() {
 

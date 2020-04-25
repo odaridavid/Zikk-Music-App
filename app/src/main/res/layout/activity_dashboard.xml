@@ -17,7 +17,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.DashboardActivity">
-    <!--TODO Use styles where necessary-->
+
     <ProgressBar
         android:id="@+id/dashboard_progress_bar"
         android:layout_width="wrap_content"

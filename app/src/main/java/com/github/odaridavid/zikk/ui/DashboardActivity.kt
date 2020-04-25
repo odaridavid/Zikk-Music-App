@@ -244,9 +244,6 @@ internal class DashboardActivity : BaseActivity(),
     }
 
     private fun initLastPlayedTrack(trackId: Long) {
-        //TODO Preserve playback position
-        //TODO Show Icon on selected track on recycler view
-        //TODO Move logic to vm
         if (!::playableTrack.isInitialized) {
             val track =
                 trackRepository.loadTrackForId(trackId.toString()) ?: return
