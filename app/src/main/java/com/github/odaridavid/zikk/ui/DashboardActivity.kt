@@ -13,9 +13,11 @@ package com.github.odaridavid.zikk.ui
  * the License.
  *
  **/
+
+import android.Manifest
 import android.content.ComponentName
-import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -43,6 +45,7 @@ import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.utils.*
 import timber.log.Timber
 import javax.inject.Inject
+
 
 /**
  * Main screen on app launch
@@ -108,6 +111,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
                 children: MutableList<MediaBrowserCompat.MediaItem>
             ) {
                 super.onChildrenLoaded(parentId, children)
+                Timber.i("$parentId children loaded.")
                 playbackList = children.map { it.toTrack() }.toMutableList()
                 dashboardProgressBar.hide()
                 tracksAdapter.setList(playbackList)
@@ -115,7 +119,7 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
 
             override fun onError(parentId: String) {
                 super.onError(parentId)
-                Timber.d("Error on $parentId")
+                Timber.i("Error on $parentId.")
             }
         }
 
@@ -158,19 +162,9 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.inject(this)
         super.onCreate(savedInstanceState)
-        checkPermissionsAndInit(onPermissionNotGranted = {
-            ActivityCompat.requestPermissions(
-                this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
-            )
-        })
+        checkPermissionsAndInit()
         initViews()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mediaBrowser?.connect()
-        observeMediaBrowserConnection()
     }
 
     override fun onResume() {
@@ -181,8 +175,8 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
 
     override fun onStop() {
         super.onStop()
-        mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
         mediaBrowser?.disconnect()
+        mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
     }
 
     override fun onDestroy() {
@@ -190,18 +184,36 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         if (requestCode == RQ_STORAGE_PERMISSIONS) {
-            checkPermissionsAndInit(onPermissionNotGranted = {
-                showToast(getString(R.string.info_storage_permissions_not_granted))
-                finish()
-            })
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                Timber.i("Storage Permissions Granted")
+                initMediaBrowser()
+            } else {
+                Timber.i("Storage Permissions Not Granted")
+                onPermissionNotGranted()
+            }
         }
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String) {
         dashboardViewModel.checkPlayerStatus()
+    }
+
+    private fun requestStoragePermissions() {
+        ActivityCompat.requestPermissions(
+            this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
+        )
+    }
+
+    private fun onPermissionNotGranted() {
+        dashboardProgressBar.hide()
+        showToast(getString(R.string.info_storage_permissions_not_granted))
+        finish()
     }
 
     private fun initViews() {
@@ -244,6 +256,8 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     private fun initMediaBrowser() {
         val cn = ComponentName(this, ZikkMediaService::class.java)
         mediaBrowser = MediaBrowserCompat(this, cn, mediaBrowserConnectionCallback, null)
+        observeMediaBrowserConnection()
+        mediaBrowser!!.connect()
     }
 
     private fun observeMediaBrowserConnection() {
@@ -262,10 +276,27 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         })
     }
 
-    private fun checkPermissionsAndInit(onPermissionNotGranted: () -> Unit) {
-        if (!PermissionUtils.allPermissionsGranted(this, PermissionUtils.STORAGE_PERMISSIONS))
-            onPermissionNotGranted()
-        else initMediaBrowser()
+    private fun checkPermissionsAndInit() {
+        if (!PermissionUtils.checkAllPermissionsGranted(
+                this,
+                PermissionUtils.STORAGE_PERMISSIONS
+            )
+        ) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            ) {
+                showDialog(
+                    title = R.string.title_need_storage_permission,
+                    message = R.string.info_storage_permission_reason,
+                    positiveBlock = ::requestStoragePermissions,
+                    negativeBlock = ::onPermissionNotGranted
+                )
+            } else {
+                requestStoragePermissions()
+            }
+        } else initMediaBrowser()
     }
 
     companion object {

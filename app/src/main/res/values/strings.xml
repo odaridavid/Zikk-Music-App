@@ -40,7 +40,8 @@
     <string name="subtitle_all_playlists">All Playlists</string>
     <string name="subtitle_all_genres">All Genres</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!--Permissions-->
+    <string name="title_need_storage_permission">Needs Storage Permission</string>
+    <string name="info_storage_permission_reason">This permission is required to access music stored in the phones storage.</string>
 
 </resources>
