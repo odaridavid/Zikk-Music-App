@@ -1,10 +1,4 @@
 package com.github.odaridavid.zikk.di
-
-import android.content.SharedPreferences
-import com.github.odaridavid.zikk.data.ShowPlayerPreference
-import dagger.Module
-import dagger.Provides
-
 /**
  *
  * Copyright 2020 David Odari
@@ -18,11 +12,17 @@ import dagger.Provides
  * the License.
  *
  **/
+import android.content.SharedPreferences
+import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
+import dagger.Module
+import dagger.Provides
+
+
 @Module
 internal class DataModule {
 
     @Provides
-    fun providesCurrentlyPlayingSharedPreference(sharedPreferences: SharedPreferences):ShowPlayerPreference{
-        return ShowPlayerPreference(sharedPreferences)
+    fun providesLastPlayedTrackPreference(sharedPreferences: SharedPreferences):LastPlayedTrackPreference{
+        return LastPlayedTrackPreference(sharedPreferences)
     }
 }

@@ -14,6 +14,7 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
+import com.github.odaridavid.zikk.base.BaseActivity
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.ui.DashboardActivity
 import dagger.BindsInstance
@@ -29,6 +30,7 @@ import javax.inject.Singleton
         AppModule::class,
 
         PlaybackModule::class,
+        DataModule::class,
 
         //Media Categories
         AlbumModule::class,
@@ -39,6 +41,8 @@ import javax.inject.Singleton
     ]
 )
 internal interface AppComponent {
+
+    fun inject(baseActivity: BaseActivity)
 
     fun inject(zikkMediaService: ZikkMediaService)
 

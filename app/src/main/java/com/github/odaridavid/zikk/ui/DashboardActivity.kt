@@ -19,72 +19,55 @@ import android.content.ComponentName
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
-import com.github.odaridavid.zikk.data.ShowPlayerPreference
-import com.github.odaridavid.zikk.mappers.PlayableTrack
+import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
+import com.github.odaridavid.zikk.databinding.ActivityDashboardBinding
+import com.github.odaridavid.zikk.mappers.toPlayableTrack
 import com.github.odaridavid.zikk.mappers.toTrack
 import com.github.odaridavid.zikk.models.MediaId
+import com.github.odaridavid.zikk.models.PlayableTrack
 import com.github.odaridavid.zikk.models.PlaybackStatus
-import com.github.odaridavid.zikk.notification.NotificationsChannelManager
-import com.github.odaridavid.zikk.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
+import com.github.odaridavid.zikk.repositories.TrackRepository
 import com.github.odaridavid.zikk.utils.*
 import timber.log.Timber
 import javax.inject.Inject
-
 
 /**
  * Main screen on app launch
  *
  */
-internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
+internal class DashboardActivity : BaseActivity(),
     SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Inject
-    lateinit var notificationsChannelManager: NotificationsChannelManager
-
-    @Inject
-    lateinit var showPlayerPreference: ShowPlayerPreference
+    lateinit var lastPlayedTrackPreference: LastPlayedTrackPreference
 
     @Inject
     lateinit var sharedPreferences: SharedPreferences
 
+    @Inject
+    lateinit var trackRepository: TrackRepository
+
     private var mediaBrowser: MediaBrowserCompat? = null
-    private var prevPlayingIndex = -1
-    lateinit var playableTrack: PlayableTrack
-    lateinit var playbackList: MutableList<PlayableTrack>
-
-    //MediaPlayer UI
-    private lateinit var nowPlayingCard: CardView
-    private lateinit var trackArtistTextView: TextView
-    private lateinit var trackTitleTextView: TextView
-    private lateinit var playPauseButton: ImageButton
-    private lateinit var playNextButton: ImageButton
-    private lateinit var artImageView: ImageView
-
-    private lateinit var mediaItemRecyclerView: RecyclerView
-    private lateinit var dashboardProgressBar: ProgressBar
-    private lateinit var tracksAdapter: TtacksAdapter
+    private lateinit var playableTrack: PlayableTrack
+    private lateinit var playbackList: MutableList<PlayableTrack>
+    lateinit var dashboardBinding: ActivityDashboardBinding
+    private lateinit var tracksAdapter: TracksAdapter
     private val dashboardViewModel: DashboardViewModel by viewModels {
         DashboardViewModel.Factory(
-            showPlayerPreference
+            lastPlayedTrackPreference
         )
     }
     private var mediaControllerCompatCallback = object : MediaControllerCompat.Callback() {
@@ -93,19 +76,19 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
             super.onPlaybackStateChanged(playbackState)
             when (playbackState.state) {
                 PlaybackStateCompat.STATE_PLAYING -> {
-                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
+                    dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
                 }
                 PlaybackStateCompat.STATE_PAUSED -> {
-                    playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
+                    dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
                 }
             }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat) {
             super.onMetadataChanged(metadata)
-            trackTitleTextView.text = metadata.title
-            trackArtistTextView.text = metadata.artist
-            artImageView.load(metadata.albumArtUri)
+            dashboardBinding.trackTitleTextView.text = metadata.title
+            dashboardBinding.trackArtistTextView.text = metadata.artist
+            dashboardBinding.albumArtImageView.load(metadata.albumArtUri)
         }
     }
 
@@ -119,13 +102,8 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
                 super.onChildrenLoaded(parentId, children)
                 Timber.i("$parentId children loaded.")
                 playbackList = children.map { it.toTrack() }.toMutableList()
-                dashboardProgressBar.hide()
+                dashboardBinding.dashboardProgressBar.hide()
                 tracksAdapter.setList(playbackList)
-            }
-
-            override fun onError(parentId: String) {
-                super.onError(parentId)
-                Timber.i("Error on $parentId.")
             }
         }
 
@@ -143,11 +121,13 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
                     this@DashboardActivity,
                     mediaControllerCompat
                 )
-                playPauseButton.setOnClickListener {
+                dashboardBinding.playPauseButton.setOnClickListener {
                     if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
                         mediaTranspotControls?.pause()
                     else mediaTranspotControls?.play()
                 }
+                observeLastPlayedTrack()
+                dashboardViewModel.checkLastPlayedTrackId()
                 mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
             }
         }
@@ -168,22 +148,16 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     override fun onCreate(savedInstanceState: Bundle?) {
         injector.inject(this)
         super.onCreate(savedInstanceState)
+        dashboardBinding = ActivityDashboardBinding.inflate(layoutInflater)
+        val view = dashboardBinding.root
+        setContentView(view)
         checkPermissionsAndInit()
         initViews()
-        initNotificationChannel()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-    }
-
-    private fun initNotificationChannel() {
-        with(notificationsChannelManager) {
-            if (versionFrom(Build.VERSION_CODES.O) && !hasChannel(PLAYBACK_CHANNEL_ID))
-                createNotificationChannel(PLAYBACK_CHANNEL_ID)
-        }
     }
 
     override fun onResume() {
         super.onResume()
-        dashboardViewModel.checkPlayerStatus()
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -215,45 +189,24 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String) {
-        dashboardViewModel.checkPlayerStatus()
-    }
-
-    private fun requestStoragePermissions() {
-        ActivityCompat.requestPermissions(
-            this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
-        )
-    }
-
-    private fun onPermissionNotGranted() {
-        dashboardProgressBar.hide()
-        showToast(getString(R.string.info_storage_permissions_not_granted))
-        finish()
+        dashboardViewModel.checkLastPlayedTrackId()
     }
 
     private fun initViews() {
-        mediaItemRecyclerView = findViewById(R.id.tracks_recycler_view)
-        dashboardProgressBar = findViewById(R.id.dashboard_progress_bar)
-        trackArtistTextView = findViewById(R.id.track_artist_text_view)
-        trackTitleTextView = findViewById(R.id.track_title_text_view)
-        playPauseButton = findViewById(R.id.play_pause_button)
-        playNextButton = findViewById(R.id.play_next_button)
-        artImageView = findViewById(R.id.album_art_image_view)
-        nowPlayingCard = findViewById(R.id.now_playing_card)
-        tracksAdapter = TtacksAdapter { id, currentlyPlayingIndex, track ->
+        tracksAdapter = TracksAdapter { id, currentlyPlayingIndex, track ->
             val playbackStatus = PlaybackStatus(prevPlayingIndex, currentlyPlayingIndex)
             dashboardViewModel.setNowPlayingStatus(playbackStatus)
             //Update to Current Track
             prevPlayingIndex = currentlyPlayingIndex
             playableTrack = track
-
-            dashboardViewModel.setPlayerActive()
-
+            dashboardViewModel.setCurrentlyPlayingTrackId(convertMediaIdToTrackId(id!!))
+            if (!dashboardBinding.nowPlayingCard.isVisible) {
+                dashboardViewModel.checkLastPlayedTrackId()
+            }
             mediaTranspotControls?.playFromMediaId(id, null)
         }
-        mediaItemRecyclerView.adapter = tracksAdapter
-
+        dashboardBinding.tracksRecyclerView.adapter = tracksAdapter
         observeNowPlayingIcon()
-        observePlayerActivity()
     }
 
     private fun observeNowPlayingIcon() {
@@ -281,13 +234,25 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         })
     }
 
-    private fun observePlayerActivity() {
-        dashboardViewModel.playerActive.observe(this, Observer { isActive ->
-            if (isActive)
-                nowPlayingCard.show()
-            else
-                nowPlayingCard.hide()
+    private fun observeLastPlayedTrack() {
+        dashboardViewModel.lastPlayedTrackId.observe(this, Observer { trackId ->
+            if (trackId != -1L) {
+                dashboardBinding.nowPlayingCard.show()
+                initLastPlayedTrack(trackId)
+            } else dashboardBinding.nowPlayingCard.hide()
         })
+    }
+
+    private fun initLastPlayedTrack(trackId: Long) {
+        //TODO Preserve playback position
+        //TODO Show Icon on selected track on recycler view
+        //TODO Move logic to vm
+        if (!::playableTrack.isInitialized) {
+            val track =
+                trackRepository.loadTrackForId(trackId.toString()) ?: return
+            playableTrack = track.toPlayableTrack()
+            mediaTranspotControls?.prepareFromMediaId(playableTrack.mediaId, null)
+        }
     }
 
     private fun checkPermissionsAndInit() {
@@ -313,7 +278,20 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         } else initMediaBrowser()
     }
 
+    private fun requestStoragePermissions() {
+        ActivityCompat.requestPermissions(
+            this, PermissionUtils.STORAGE_PERMISSIONS, RQ_STORAGE_PERMISSIONS
+        )
+    }
+
+    private fun onPermissionNotGranted() {
+        dashboardBinding.dashboardProgressBar.hide()
+        showToast(getString(R.string.info_storage_permissions_not_granted))
+        finish()
+    }
+
     companion object {
         private const val RQ_STORAGE_PERMISSIONS = 1000
+        private var prevPlayingIndex = -1
     }
 }

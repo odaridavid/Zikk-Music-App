@@ -25,13 +25,15 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
 import androidx.core.net.toUri
 import com.github.odaridavid.zikk.models.Track
-import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.getAlbumArtBitmap
 import com.github.odaridavid.zikk.utils.versionFrom
+import kotlinx.coroutines.delay
 
 /**
  * MediaSessionCallback receives updates from initiated media controller actions
@@ -92,6 +94,24 @@ internal class MediaSessionCallback(
             trackPlayer.stop()
             stopForeground(false)
         }
+    }
+
+    override fun onPrepareFromMediaId(mediaId: String?, extras: Bundle?) {
+        super.onPrepareFromMediaId(mediaId, extras)
+        with(trackPlayer) {
+            reset()
+            setDataSourceFromMediaId(serviceContext, mediaId!!)
+            prepare(delayStart = true)
+        }
+        trackPlayer.getTrackInformation(mediaId!!)?.let { track ->
+            setSessionMetadata(track)
+        }
+        val state = playbackStateBuilder.setState(
+            PlaybackStateCompat.STATE_PAUSED,
+            PLAYBACK_POSITION_UNKNOWN,
+            0.0F
+        )
+        setPlaybackState(state)
     }
 
     override fun onSkipToNext() {

@@ -21,13 +21,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.github.odaridavid.zikk.R
-import com.github.odaridavid.zikk.mappers.PlayableTrack
+import com.github.odaridavid.zikk.models.PlayableTrack
 import com.github.odaridavid.zikk.utils.invisible
 import com.github.odaridavid.zikk.utils.show
 
-
-internal class TtacksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit) :
-    RecyclerView.Adapter<TtacksAdapter.TrackViewHolder>() {
+//TODO Refactor back to list adapter
+internal class TracksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit) :
+    RecyclerView.Adapter<TracksAdapter.TrackViewHolder>() {
 
     private lateinit var mediaItems: MutableList<PlayableTrack>
 
@@ -60,7 +60,8 @@ internal class TtacksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit)
 
     inner class TrackViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
 
-        private val nowPlayingImageView: ImageView = view.findViewById(R.id.track_now_playing_image_view)
+        private val nowPlayingImageView: ImageView =
+            view.findViewById(R.id.track_now_playing_image_view)
 
         fun bind(mediaItem: PlayableTrack) {
             with(view) {

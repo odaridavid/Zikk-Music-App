@@ -1,5 +1,10 @@
 package com.github.odaridavid.zikk.mappers
 
+import androidx.core.net.toUri
+import com.github.odaridavid.zikk.models.MediaId
+import com.github.odaridavid.zikk.models.PlayableTrack
+import com.github.odaridavid.zikk.models.Track
+
 /**
  *
  * Copyright 2020 David Odari
@@ -13,15 +18,14 @@ package com.github.odaridavid.zikk.mappers
  * the License.
  *
  **/
-import android.support.v4.media.MediaBrowserCompat
-import com.github.odaridavid.zikk.models.PlayableTrack
 
+internal fun Track.toPlayableTrack(): PlayableTrack {
+    val mediaId = "${MediaId.TRACK}-${id}"
 
-fun MediaBrowserCompat.MediaItem.toTrack(): PlayableTrack {
     return PlayableTrack(
-        this.mediaId,
-        this.description.title.toString(),
-        this.description.subtitle.toString(),
-        this.description.iconUri
+        mediaId,
+        title,
+        artist,
+        albumArt.toUri()
     )
 }

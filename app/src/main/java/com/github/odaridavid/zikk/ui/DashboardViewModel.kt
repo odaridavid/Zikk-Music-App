@@ -17,10 +17,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.github.odaridavid.zikk.data.ShowPlayerPreference
+import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
 import com.github.odaridavid.zikk.models.PlaybackStatus
 
-internal class DashboardViewModel(private val showPlayerPreference: ShowPlayerPreference) :
+internal class DashboardViewModel(private val lastPlayedTrackPreference: LastPlayedTrackPreference) :
     ViewModel() {
 
     private val _isMediaBrowserConnected = MutableLiveData<Boolean>()
@@ -31,12 +31,12 @@ internal class DashboardViewModel(private val showPlayerPreference: ShowPlayerPr
     val playbackStatus: LiveData<PlaybackStatus>
         get() = _playbackStatus
 
-    private val _playerActive = MutableLiveData<Boolean>()
-    val playerActive: LiveData<Boolean>
-        get() = _playerActive
+    private val _lastPlayedTrackId = MutableLiveData<Long>()
+    val lastPlayedTrackId: LiveData<Long>
+        get() = _lastPlayedTrackId
 
     init {
-        _playerActive.value = showPlayerPreference.hasPlayedTrackBefore()
+        _lastPlayedTrackId.value = lastPlayedTrackPreference.getLastPlayedTrackId()
     }
 
     fun setIsConnected(value: Boolean) {
@@ -47,22 +47,21 @@ internal class DashboardViewModel(private val showPlayerPreference: ShowPlayerPr
         _playbackStatus.value = playbackStatus
     }
 
-    fun setPlayerActive() {
-        showPlayerPreference.setHasPlayedTrackBefore()
-        checkPlayerStatus()
+    fun setCurrentlyPlayingTrackId(trackId: Long) {
+        lastPlayedTrackPreference.setLastPlayedTrackId(trackId)
     }
 
-    fun checkPlayerStatus() {
-        _playerActive.value = showPlayerPreference.hasPlayedTrackBefore()
+    fun checkLastPlayedTrackId() {
+        _lastPlayedTrackId.value = lastPlayedTrackPreference.getLastPlayedTrackId()
     }
 
     class Factory(
-        private val showPlayerPreference: ShowPlayerPreference
+        private val lastPlayedTrackPreference: LastPlayedTrackPreference
     ) : ViewModelProvider.NewInstanceFactory() {
 
         @Suppress("unchecked_cast")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return DashboardViewModel(showPlayerPreference) as T
+            return DashboardViewModel(lastPlayedTrackPreference) as T
         }
     }
 }

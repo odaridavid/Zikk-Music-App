@@ -21,6 +21,7 @@ import android.os.PowerManager
 import android.provider.MediaStore
 import com.github.odaridavid.zikk.models.Track
 import com.github.odaridavid.zikk.repositories.TrackRepository
+import com.github.odaridavid.zikk.utils.convertMediaIdToTrackId
 import timber.log.Timber
 
 /**
@@ -34,6 +35,7 @@ internal class TrackPlayer(
     MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var delayStart = false
 
     init {
         initPlayer()
@@ -51,8 +53,9 @@ internal class TrackPlayer(
         }
     }
 
-    fun prepare() {
+    fun prepare(delayStart: Boolean = false) {
         Timber.i("Media Player Preparing")
+        this.delayStart = delayStart
         mediaPlayer?.prepareAsync()
     }
 
@@ -97,18 +100,14 @@ internal class TrackPlayer(
 
     override fun onPrepared(mediaPlayer: MediaPlayer?) {
         Timber.i("Media Player Prepared")
-        start()
+        if (!delayStart)
+            start()
     }
 
     override fun onError(mediaPlayer: MediaPlayer?, what: Int, extra: Int): Boolean {
         Timber.i("Media Player Error : $what")
         reset()
         return true
-    }
-
-    private fun convertMediaIdToTrackId(mediaId: String): Long {
-        val spIndex = mediaId.indexOf('-')
-        return mediaId.substring(spIndex + 1).toLong()
     }
 
 }
