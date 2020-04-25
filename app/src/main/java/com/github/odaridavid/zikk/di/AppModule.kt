@@ -17,7 +17,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioManager
-import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager
+import com.github.odaridavid.zikk.notification.NotificationsChannelManager
 import com.github.odaridavid.zikk.utils.Constants
 import dagger.Module
 import dagger.Provides

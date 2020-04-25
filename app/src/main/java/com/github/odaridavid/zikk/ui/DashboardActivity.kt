@@ -42,8 +42,8 @@ import com.github.odaridavid.zikk.mappers.PlayableTrack
 import com.github.odaridavid.zikk.mappers.toTrack
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.models.PlaybackStatus
-import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager
-import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
+import com.github.odaridavid.zikk.notification.NotificationsChannelManager
+import com.github.odaridavid.zikk.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.utils.*
 import timber.log.Timber

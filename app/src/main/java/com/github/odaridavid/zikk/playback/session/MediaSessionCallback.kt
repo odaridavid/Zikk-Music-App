@@ -28,7 +28,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.net.toUri
 import com.github.odaridavid.zikk.models.Track
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
-import com.github.odaridavid.zikk.playback.notification.PlaybackNotificationBuilder
+import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.getAlbumArtBitmap
 import com.github.odaridavid.zikk.utils.versionFrom
