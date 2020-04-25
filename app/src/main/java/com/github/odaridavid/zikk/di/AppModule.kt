@@ -17,6 +17,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioManager
+import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager
 import com.github.odaridavid.zikk.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -40,5 +41,13 @@ class AppModule {
     @Provides
     fun providesSharedPreference(context: Context): SharedPreferences {
         return context.getSharedPreferences(Constants.PREFERENCE_NAME, Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    fun providesNotificationChannelsManager(
+        context: Context,
+        notificationManager: NotificationManager
+    ): NotificationsChannelManager {
+        return NotificationsChannelManager(context, notificationManager)
     }
 }

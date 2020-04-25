@@ -19,6 +19,7 @@ import android.content.ComponentName
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -41,6 +42,8 @@ import com.github.odaridavid.zikk.mappers.PlayableTrack
 import com.github.odaridavid.zikk.mappers.toTrack
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.models.PlaybackStatus
+import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager
+import com.github.odaridavid.zikk.playback.notification.NotificationsChannelManager.Companion.PLAYBACK_CHANNEL_ID
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
 import com.github.odaridavid.zikk.utils.*
 import timber.log.Timber
@@ -53,6 +56,9 @@ import javax.inject.Inject
  */
 internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
     SharedPreferences.OnSharedPreferenceChangeListener {
+
+    @Inject
+    lateinit var notificationsChannelManager: NotificationsChannelManager
 
     @Inject
     lateinit var showPlayerPreference: ShowPlayerPreference
@@ -164,7 +170,15 @@ internal class DashboardActivity : BaseActivity(R.layout.activity_dashboard),
         super.onCreate(savedInstanceState)
         checkPermissionsAndInit()
         initViews()
+        initNotificationChannel()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+    }
+
+    private fun initNotificationChannel() {
+        with(notificationsChannelManager) {
+            if (versionFrom(Build.VERSION_CODES.O) && !hasChannel(PLAYBACK_CHANNEL_ID))
+                createNotificationChannel(PLAYBACK_CHANNEL_ID)
+        }
     }
 
     override fun onResume() {
