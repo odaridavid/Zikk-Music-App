@@ -19,5 +19,3 @@ import android.support.v4.media.session.MediaControllerCompat
 val Activity.mediaTranspotControls: MediaControllerCompat.TransportControls?
     get() = MediaControllerCompat.getMediaController(this).transportControls
 
-val Activity.mediaControllerCompat: MediaControllerCompat?
-    get() = MediaControllerCompat.getMediaController(this)

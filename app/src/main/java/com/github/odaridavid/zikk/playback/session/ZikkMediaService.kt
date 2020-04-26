@@ -94,9 +94,17 @@ internal class ZikkMediaService : MediaBrowserServiceCompat(),
         )
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent == null) {
+            return START_STICKY
+        }
         MediaButtonReceiver.handleIntent(mediaSessionCompat, intent)
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopSelf()
     }
 
     /**
