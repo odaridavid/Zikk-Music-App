@@ -76,7 +76,7 @@ internal class DashboardActivity : BaseActivity(),
         override fun onPlaybackStateChanged(playbackState: PlaybackStateCompat) {
             super.onPlaybackStateChanged(playbackState)
             Timber.d("Playback changed")
-            setPlayPauseDrawable(playbackState.state)
+            handlePlaybackState(playbackState.state)
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat) {
@@ -118,7 +118,7 @@ internal class DashboardActivity : BaseActivity(),
                 observeLastPlayedTrack()
                 dashboardViewModel.checkLastPlayedTrackId()
                 mediaControllerCompat?.playbackState?.let { state ->
-                    setPlayPauseDrawable(state.state)
+                    handlePlaybackState(state.state)
                 }
                 mediaControllerCompat?.metadata?.let { metadata ->
                     bindMetadataToViews(metadata)
@@ -157,16 +157,16 @@ internal class DashboardActivity : BaseActivity(),
             mediaControllerCompat?.playbackState?.let { state ->
                 if (state.state == PlaybackStateCompat.STATE_PLAYING) {
                     mediaTranspotControls?.pause()
-                    setPlayPauseDrawable(PlaybackStateCompat.STATE_PAUSED)
+                    handlePlaybackState(PlaybackStateCompat.STATE_PAUSED)
                 } else {
                     mediaTranspotControls?.play()
-                    setPlayPauseDrawable(PlaybackStateCompat.STATE_PLAYING)
+                    handlePlaybackState(PlaybackStateCompat.STATE_PLAYING)
                 }
             }
         }
 
         mediaControllerCompat?.playbackState?.let { state ->
-            setPlayPauseDrawable(state.state)
+            handlePlaybackState(state.state)
         }
 
         volumeControlStream = AudioManager.STREAM_MUSIC
@@ -226,13 +226,22 @@ internal class DashboardActivity : BaseActivity(),
         dashboardBinding.albumArtImageView.load(metadata.albumArtUri)
     }
 
-    private fun setPlayPauseDrawable(state: Int) {
+    private fun handlePlaybackState(state: Int) {
         when (state) {
             PlaybackStateCompat.STATE_PLAYING -> {
                 dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
+                tracksAdapter.updateIsPlaying(prevPlayingIndex, true)
             }
             PlaybackStateCompat.STATE_PAUSED -> {
                 dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
+                tracksAdapter.updateIsPlaying(prevPlayingIndex, false)
+            }
+            PlaybackStateCompat.STATE_STOPPED -> {
+                dashboardBinding.nowPlayingCard.hide()
+                tracksAdapter.updateIsPlaying(prevPlayingIndex, false)
+            }
+            PlaybackStateCompat.STATE_ERROR -> {
+                Timber.d("State error")
             }
         }
     }
