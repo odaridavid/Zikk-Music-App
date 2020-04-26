@@ -229,14 +229,11 @@ internal class DashboardActivity : BaseActivity(),
     private fun setPlayPauseDrawable(state: Int) {
         when (state) {
             PlaybackStateCompat.STATE_PLAYING -> {
-                Timber.d("Set play drawable")
                 dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
             }
             PlaybackStateCompat.STATE_PAUSED -> {
-                Timber.d("Set pause drawable")
                 dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
             }
-            else -> Timber.d("Missed drawable case")
         }
     }
 
@@ -276,7 +273,6 @@ internal class DashboardActivity : BaseActivity(),
 
     private fun initLastPlayedTrack(trackId: Long) {
         if (!::playableTrack.isInitialized) {
-            Timber.d("Re-initialized last played track")
             val track =
                 trackRepository.loadTrackForId(trackId.toString()) ?: return
             playableTrack = track.toPlayableTrack()
