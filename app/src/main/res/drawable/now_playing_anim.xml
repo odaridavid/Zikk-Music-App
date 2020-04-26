@@ -1,0 +1,52 @@
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:name="playing_start"
+                android:fillColor="#000000"
+                android:pathData="M 7 18 L 9 18 L 9 6 L 7 6 L 7 18 Z M 11 22 L 13 22 L 13 2 L 11 2 L 11 22 Z M 3 14 L 5 14 L 5 10 L 3 10 L 3 14 Z M 15 18 L 17 18 L 17 6 L 15 6 L 15 18 Z M 19 10 L 19 14 L 21 14 L 21 10 L 19 10 Z" />
+        </vector>
+    </aapt:attr>
+    <target android:name="playing_start">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="1000"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="pathData"
+                    android:valueFrom="M 7 18 L 9 18 L 9 6 L 7 6 L 7 18 Z M 11 22 L 13 22 L 13 2 L 11 2 L 11 22 Z M 3 14 L 5 14 L 5 10 L 3 10 L 3 14 Z M 15 18 L 17 18 L 17 6 L 15 6 L 15 18 Z M 19 10 L 19 14 L 21 14 L 21 10 L 19 10 Z"
+                    android:valueTo="M 19 10 L 19 14 L 21 14 L 21 10 L 19 10 Z M 3 14 L 5 14 L 5 10 L 3 10 L 3 14 Z M 15 18 L 17 18 L 17 6 L 15 6 L 15 18 Z M 11 22 L 13 22 L 13 2 L 11 2 L 11 22 Z M 7 18 L 9 18 L 9 6 L 7 6 L 7 18 Z"
+                    android:valueType="pathType" />
+                <objectAnimator
+                    android:duration="500"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="fillColor"
+                    android:valueFrom="#000000"
+                    android:valueTo="#ffd600"
+                    android:valueType="colorType" />
+                <objectAnimator
+                    android:duration="500"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="fillColor"
+                    android:startOffset="150"
+                    android:valueFrom="#ffd600"
+                    android:valueTo="#000000"
+                    android:valueType="colorType" />
+                <objectAnimator
+                    android:duration="500"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="61"
+                    android:valueFrom="0.2"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
