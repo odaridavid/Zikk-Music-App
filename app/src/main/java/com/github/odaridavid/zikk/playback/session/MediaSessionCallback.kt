@@ -33,7 +33,6 @@ import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.getAlbumArtBitmap
 import com.github.odaridavid.zikk.utils.versionFrom
-import kotlinx.coroutines.delay
 
 /**
  * MediaSessionCallback receives updates from initiated media controller actions
@@ -52,6 +51,7 @@ internal class MediaSessionCallback(
 
     private var audioFocusRequest: AudioFocusRequest? = null
     private var metadataCompatBuilder = MediaMetadataCompat.Builder()
+    //todo fix on swipe notification on pause not working
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         super.onPlayFromMediaId(mediaId, extras)
@@ -81,7 +81,6 @@ internal class MediaSessionCallback(
             )
             setPlaybackState(state)
             updateMediaNotification()
-            // Take the service out of the foreground
             stopForeground(false)
         }
     }
@@ -90,9 +89,15 @@ internal class MediaSessionCallback(
         super.onStop()
         releaseAudioFocus()
         with(serviceContext) {
-            stopSelf()
             trackPlayer.stop()
-            stopForeground(false)
+            val state = playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_STOPPED,
+                mediaSessionCompat.controller.playbackState.position,
+                0.0F
+            )
+            setPlaybackState(state)
+            stopForeground(true)
+            stopSelf()
         }
     }
 
