@@ -61,6 +61,7 @@ internal class DashboardActivity : BaseActivity(),
     lateinit var trackRepository: TrackRepository
 
     private var mediaBrowser: MediaBrowserCompat? = null
+    private var mediaControllerCompat: MediaControllerCompat? = null
     private lateinit var playableTrack: PlayableTrack
     private lateinit var playbackList: MutableList<PlayableTrack>
     lateinit var dashboardBinding: ActivityDashboardBinding
@@ -74,21 +75,14 @@ internal class DashboardActivity : BaseActivity(),
 
         override fun onPlaybackStateChanged(playbackState: PlaybackStateCompat) {
             super.onPlaybackStateChanged(playbackState)
-            when (playbackState.state) {
-                PlaybackStateCompat.STATE_PLAYING -> {
-                    dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
-                }
-                PlaybackStateCompat.STATE_PAUSED -> {
-                    dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
-                }
-            }
+            Timber.d("Playback changed")
+            setPlayPauseDrawable(playbackState.state)
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat) {
             super.onMetadataChanged(metadata)
-            dashboardBinding.trackTitleTextView.text = metadata.title
-            dashboardBinding.trackArtistTextView.text = metadata.artist
-            dashboardBinding.albumArtImageView.load(metadata.albumArtUri)
+            Timber.d("Metadata changed")
+            bindMetadataToViews(metadata)
         }
     }
 
@@ -114,21 +108,22 @@ internal class DashboardActivity : BaseActivity(),
             Timber.i("Connection with media browser successful")
             dashboardViewModel.setIsConnected(true)
             mediaBrowser?.run {
-                val mediaControllerCompat =
+                mediaControllerCompat =
                     MediaControllerCompat(this@DashboardActivity, sessionToken)
 
                 MediaControllerCompat.setMediaController(
                     this@DashboardActivity,
                     mediaControllerCompat
                 )
-                dashboardBinding.playPauseButton.setOnClickListener {
-                    if (mediaControllerCompat.playbackState.state == PlaybackStateCompat.STATE_PLAYING)
-                        mediaTranspotControls?.pause()
-                    else mediaTranspotControls?.play()
-                }
                 observeLastPlayedTrack()
                 dashboardViewModel.checkLastPlayedTrackId()
-                mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
+                mediaControllerCompat?.playbackState?.let { state ->
+                    setPlayPauseDrawable(state.state)
+                }
+                mediaControllerCompat?.metadata?.let { metadata ->
+                    bindMetadataToViews(metadata)
+                }
+                mediaControllerCompat?.registerCallback(mediaControllerCompatCallback)
             }
         }
 
@@ -158,6 +153,22 @@ internal class DashboardActivity : BaseActivity(),
 
     override fun onResume() {
         super.onResume()
+        dashboardBinding.playPauseButton.setOnClickListener {
+            mediaControllerCompat?.playbackState?.let { state ->
+                if (state.state == PlaybackStateCompat.STATE_PLAYING) {
+                    mediaTranspotControls?.pause()
+                    setPlayPauseDrawable(PlaybackStateCompat.STATE_PAUSED)
+                } else {
+                    mediaTranspotControls?.play()
+                    setPlayPauseDrawable(PlaybackStateCompat.STATE_PLAYING)
+                }
+            }
+        }
+
+        mediaControllerCompat?.playbackState?.let { state ->
+            setPlayPauseDrawable(state.state)
+        }
+
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -201,12 +212,32 @@ internal class DashboardActivity : BaseActivity(),
             playableTrack = track
             dashboardViewModel.setCurrentlyPlayingTrackId(convertMediaIdToTrackId(id!!))
             if (!dashboardBinding.nowPlayingCard.isVisible) {
-                dashboardViewModel.checkLastPlayedTrackId()
+                dashboardViewModel.checkLastPlayedTrackId()//TODO Refactor for readability
             }
             mediaTranspotControls?.playFromMediaId(id, null)
         }
         dashboardBinding.tracksRecyclerView.adapter = tracksAdapter
         observeNowPlayingIcon()
+    }
+
+    private fun bindMetadataToViews(metadata: MediaMetadataCompat) {
+        dashboardBinding.trackTitleTextView.text = metadata.title
+        dashboardBinding.trackArtistTextView.text = metadata.artist
+        dashboardBinding.albumArtImageView.load(metadata.albumArtUri)
+    }
+
+    private fun setPlayPauseDrawable(state: Int) {
+        when (state) {
+            PlaybackStateCompat.STATE_PLAYING -> {
+                Timber.d("Set play drawable")
+                dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_pause_black_48dp))
+            }
+            PlaybackStateCompat.STATE_PAUSED -> {
+                Timber.d("Set pause drawable")
+                dashboardBinding.playPauseButton.setImageDrawable(getDrawable(R.drawable.ic_play_black_48dp))
+            }
+            else -> Timber.d("Missed drawable case")
+        }
     }
 
     private fun observeNowPlayingIcon() {
@@ -245,10 +276,14 @@ internal class DashboardActivity : BaseActivity(),
 
     private fun initLastPlayedTrack(trackId: Long) {
         if (!::playableTrack.isInitialized) {
+            Timber.d("Re-initialized last played track")
             val track =
                 trackRepository.loadTrackForId(trackId.toString()) ?: return
             playableTrack = track.toPlayableTrack()
-            mediaTranspotControls?.prepareFromMediaId(playableTrack.mediaId, null)
+            val state =
+                mediaControllerCompat?.playbackState?.state ?: PlaybackStateCompat.STATE_NONE
+            if (state != PlaybackStateCompat.STATE_PLAYING)
+                mediaTranspotControls?.prepareFromMediaId(playableTrack.mediaId, null)
         }
     }
 
