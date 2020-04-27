@@ -1,14 +1,16 @@
 ## Zikk
 
-A sample media player application
+A sample media player application making use of android MediaPlayer Apis
+The sample is still under development and may contain a number of bugs.Feel
+free to file an issue if you spot one or send a PR😎
 
 ### Demo/Screenshots
 
+<img src="art/app.gif" width="200"/>
+
 ### Prerequisites
 
-### Libraries
-
-### Contributing
+Setup a firebase project and hook it up.
 
 ### License
 ```
