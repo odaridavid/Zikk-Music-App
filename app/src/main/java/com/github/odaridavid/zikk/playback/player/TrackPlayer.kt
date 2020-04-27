@@ -1,4 +1,4 @@
-package com.github.odaridavid.zikk.playback.session
+package com.github.odaridavid.zikk.playback.player
 
 /**
  *
@@ -31,15 +31,31 @@ import timber.log.Timber
 internal class TrackPlayer(
     val context: Context,
     private val trackRepository: TrackRepository
-) :
-    MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+) : MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
 
-    private var mediaPlayer: MediaPlayer? = null
+    lateinit var mediaPlayer: MediaPlayer
     private var delayStart = false
 
     init {
         initPlayer()
     }
+
+    private val isInitialized: Boolean
+        get() = ::mediaPlayer.isInitialized
+
+    val currentPosition: Int
+        get() {
+            return if (isInitialized) mediaPlayer.currentPosition else -1
+        }
+
+    val isPlaying: Boolean
+        get() {
+            return if (isInitialized) mediaPlayer.isPlaying else false
+        }
+    val duration: Int
+        get() {
+            return if (isInitialized) mediaPlayer.duration else -1
+        }
 
     private fun initPlayer() {
         mediaPlayer = MediaPlayer().apply {
@@ -56,38 +72,32 @@ internal class TrackPlayer(
     fun prepare(delayStart: Boolean = false) {
         Timber.i("Media Player Preparing")
         this.delayStart = delayStart
-        mediaPlayer?.prepareAsync()
+        mediaPlayer.prepareAsync()
     }
 
     fun start() {
         Timber.i("Media Player Starting")
-        mediaPlayer?.start()
+        mediaPlayer.start()
     }
 
     fun pause() {
         Timber.i("Media Player Paused")
-        mediaPlayer?.pause()
+        mediaPlayer.pause()
     }
 
     fun stop() {
         Timber.i("Media Player Stopped")
-        mediaPlayer?.stop()
+        mediaPlayer.stop()
     }
 
     fun reset() {
         Timber.i("Media Player Reset")
-        mediaPlayer?.reset()
+        mediaPlayer.reset()
     }
 
     fun release() {
         Timber.i("Media Player Released")
-        mediaPlayer?.release()
-        mediaPlayer = null
-    }
-
-    fun getTrackInformation(mediaId: String): Track? {
-        val trackId = convertMediaIdToTrackId(mediaId)
-        return trackRepository.loadTrackForId(trackId.toString())
+        mediaPlayer.release()
     }
 
     fun setDataSourceFromMediaId(context: Context, mediaId: String) {
@@ -95,7 +105,7 @@ internal class TrackPlayer(
         if (trackId == 0L) return
         val contentUris =
             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId)
-        mediaPlayer?.setDataSource(context, contentUris)
+        mediaPlayer.setDataSource(context, contentUris)
     }
 
     override fun onPrepared(mediaPlayer: MediaPlayer?) {
@@ -109,5 +119,15 @@ internal class TrackPlayer(
         reset()
         return true
     }
+
+    fun getTrackInformationFromMediaId(mediaId: String): Track? {
+        val trackId = convertMediaIdToTrackId(mediaId)
+        return trackRepository.loadTrackForId(trackId.toString())
+    }
+
+    fun getTrackInformationFromTrackId(trackId: Long): Track? {
+        return trackRepository.loadTrackForId(trackId.toString())
+    }
+
 
 }

@@ -27,12 +27,16 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.media.session.PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
 import androidx.core.net.toUri
+import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
+import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.models.Track
 import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
+import com.github.odaridavid.zikk.playback.player.TrackPlayer
 import com.github.odaridavid.zikk.utils.Constants.PLAYBACK_NOTIFICATION_ID
 import com.github.odaridavid.zikk.utils.getAlbumArtBitmap
 import com.github.odaridavid.zikk.utils.versionFrom
+import timber.log.Timber
 
 /**
  * MediaSessionCallback receives updates from initiated media controller actions
@@ -46,18 +50,37 @@ internal class MediaSessionCallback(
     private val audioManager: AudioManager,
     private val becomingNoisyReceiver: BecomingNoisyReceiver,
     private val playbackStateBuilder: PlaybackStateCompat.Builder,
-    private val trackPlayer: TrackPlayer
+    private val metadataCompatBuilder: MediaMetadataCompat.Builder,
+    private val trackPlayer: TrackPlayer,
+    lastPlayedTrackPreference: LastPlayedTrackPreference
 ) : MediaSessionCompat.Callback(), AudioManager.OnAudioFocusChangeListener {
 
     private var audioFocusRequest: AudioFocusRequest? = null
-    private var metadataCompatBuilder = MediaMetadataCompat.Builder()
-    //todo fix on swipe notification on pause not working
+
+    init {
+        setPlaybackState(
+            playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PAUSED,
+                PLAYBACK_POSITION_UNKNOWN,
+                0.0F
+            )
+        )
+        val track =
+            trackPlayer.getTrackInformationFromTrackId(lastPlayedTrackPreference.lastPlayedTrackId)
+        track?.run {
+            setSessionMetadata(this)
+            mediaSessionCompat.controller
+                .transportControls
+                .prepareFromMediaId("${MediaId.TRACK}-${this.id}", null)
+        }
+    }
 
     override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
         super.onPlayFromMediaId(mediaId, extras)
         val request = initAudioFocus()
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            startSession(mediaId)
+            Timber.d("Playing from media id $mediaId")
+            startPlayback(mediaId)
         }
     }
 
@@ -65,7 +88,7 @@ internal class MediaSessionCallback(
         super.onPlay()
         val request = initAudioFocus()
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            resumeSession()
+            resumePlayback()
         }
     }
 
@@ -108,7 +131,7 @@ internal class MediaSessionCallback(
             setDataSourceFromMediaId(serviceContext, mediaId!!)
             prepare(delayStart = true)
         }
-        trackPlayer.getTrackInformation(mediaId!!)?.let { track ->
+        trackPlayer.getTrackInformationFromMediaId(mediaId!!)?.let { track ->
             setSessionMetadata(track)
         }
         val state = playbackStateBuilder.setState(
@@ -134,7 +157,8 @@ internal class MediaSessionCallback(
         }
     }
 
-    private fun startSession(mediaId: String) {
+    private fun startPlayback(mediaId: String) {
+        Timber.i("Starting playback")
         with(serviceContext) {
             startService(Intent(this, ZikkMediaService::class.java))
             with(trackPlayer) {
@@ -142,7 +166,7 @@ internal class MediaSessionCallback(
                 setDataSourceFromMediaId(serviceContext, mediaId)
                 prepare()
             }
-            trackPlayer.getTrackInformation(mediaId)?.let { track ->
+            trackPlayer.getTrackInformationFromMediaId(mediaId)?.let { track ->
                 setSessionMetadata(track)
             }
             val state = playbackStateBuilder.setState(
@@ -156,7 +180,8 @@ internal class MediaSessionCallback(
         }
     }
 
-    private fun resumeSession() {
+    private fun resumePlayback() {
+        Timber.i("Resuming playback")
         with(serviceContext) {
             startService(Intent(this, ZikkMediaService::class.java))
             trackPlayer.start()

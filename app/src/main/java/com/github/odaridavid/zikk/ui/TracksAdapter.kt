@@ -30,7 +30,7 @@ import com.github.odaridavid.zikk.utils.invisible
 import com.github.odaridavid.zikk.utils.show
 import com.github.odaridavid.zikk.utils.versionFrom
 
-internal class TracksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit) :
+internal class TracksAdapter(val onClick: (String?, Int) -> Unit) :
     RecyclerView.Adapter<TracksAdapter.TrackViewHolder>() {
 
     private lateinit var mediaItems: MutableList<PlayableTrack>
@@ -98,7 +98,7 @@ internal class TracksAdapter(val onClick: (String?, Int, PlayableTrack) -> Unit)
                 setNowPlayingViewVisibility(mediaItem.isPlaying, nowPlayingImageView)
 
                 setOnClickListener {
-                    onClick(mediaItem.mediaId, adapterPosition, mediaItems[adapterPosition])
+                    onClick(mediaItem.mediaId, adapterPosition)
                 }
             }
         }

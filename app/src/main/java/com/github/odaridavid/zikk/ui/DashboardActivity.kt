@@ -16,7 +16,6 @@ package com.github.odaridavid.zikk.ui
 
 import android.Manifest
 import android.content.ComponentName
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
@@ -26,20 +25,17 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import coil.api.load
 import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.base.BaseActivity
 import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
 import com.github.odaridavid.zikk.databinding.ActivityDashboardBinding
-import com.github.odaridavid.zikk.mappers.toPlayableTrack
 import com.github.odaridavid.zikk.mappers.toTrack
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.models.PlayableTrack
 import com.github.odaridavid.zikk.models.PlaybackStatus
 import com.github.odaridavid.zikk.playback.session.ZikkMediaService
-import com.github.odaridavid.zikk.repositories.TrackRepository
 import com.github.odaridavid.zikk.utils.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -48,21 +44,12 @@ import javax.inject.Inject
  * Main screen on app launch
  *
  */
-internal class DashboardActivity : BaseActivity(),
-    SharedPreferences.OnSharedPreferenceChangeListener {
+internal class DashboardActivity : BaseActivity() {
 
     @Inject
     lateinit var lastPlayedTrackPreference: LastPlayedTrackPreference
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
-
-    @Inject
-    lateinit var trackRepository: TrackRepository
-
     private var mediaBrowser: MediaBrowserCompat? = null
-    private var mediaControllerCompat: MediaControllerCompat? = null
-    private lateinit var playableTrack: PlayableTrack
     private lateinit var playbackList: MutableList<PlayableTrack>
     lateinit var dashboardBinding: ActivityDashboardBinding
     private lateinit var tracksAdapter: TracksAdapter
@@ -108,22 +95,21 @@ internal class DashboardActivity : BaseActivity(),
             Timber.i("Connection with media browser successful")
             dashboardViewModel.setIsConnected(true)
             mediaBrowser?.run {
-                mediaControllerCompat =
+                val mediaControllerCompat =
                     MediaControllerCompat(this@DashboardActivity, sessionToken)
 
                 MediaControllerCompat.setMediaController(
                     this@DashboardActivity,
                     mediaControllerCompat
                 )
-                observeLastPlayedTrack()
-                dashboardViewModel.checkLastPlayedTrackId()
-                mediaControllerCompat?.playbackState?.let { state ->
+                mediaControllerCompat.playbackState?.let { state ->
                     handlePlaybackState(state.state)
                 }
-                mediaControllerCompat?.metadata?.let { metadata ->
+                mediaControllerCompat.metadata?.let { metadata ->
                     bindMetadataToViews(metadata)
                 }
-                mediaControllerCompat?.registerCallback(mediaControllerCompatCallback)
+                initPlayPause(mediaControllerCompat)
+                mediaControllerCompat.registerCallback(mediaControllerCompatCallback)
             }
         }
 
@@ -146,15 +132,26 @@ internal class DashboardActivity : BaseActivity(),
         dashboardBinding = ActivityDashboardBinding.inflate(layoutInflater)
         val view = dashboardBinding.root
         setContentView(view)
+    }
+
+    override fun onStart() {
+        super.onStart()
         checkPermissionsAndInit()
-        initViews()
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        initAdapter()
     }
 
     override fun onResume() {
         super.onResume()
-        dashboardBinding.playPauseButton.setOnClickListener {
+        if (mediaBrowser?.isConnected == true)
             mediaControllerCompat?.playbackState?.let { state ->
+                handlePlaybackState(state.state)
+            }
+        volumeControlStream = AudioManager.STREAM_MUSIC
+    }
+
+    private fun initPlayPause(mediaControllerCompat: MediaControllerCompat) {
+        dashboardBinding.playPauseButton.setOnClickListener {
+            mediaControllerCompat.playbackState?.let { state ->
                 if (state.state == PlaybackStateCompat.STATE_PLAYING) {
                     mediaTranspotControls?.pause()
                     handlePlaybackState(PlaybackStateCompat.STATE_PAUSED)
@@ -164,23 +161,12 @@ internal class DashboardActivity : BaseActivity(),
                 }
             }
         }
-
-        mediaControllerCompat?.playbackState?.let { state ->
-            handlePlaybackState(state.state)
-        }
-
-        volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
     override fun onStop() {
         super.onStop()
         mediaBrowser?.disconnect()
         mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onRequestPermissionsResult(
@@ -199,21 +185,12 @@ internal class DashboardActivity : BaseActivity(),
         }
     }
 
-    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String) {
-        dashboardViewModel.checkLastPlayedTrackId()
-    }
-
-    private fun initViews() {
-        tracksAdapter = TracksAdapter { id, currentlyPlayingIndex, track ->
+    private fun initAdapter() {
+        tracksAdapter = TracksAdapter { id, currentlyPlayingIndex ->
             val playbackStatus = PlaybackStatus(prevPlayingIndex, currentlyPlayingIndex)
             dashboardViewModel.setNowPlayingStatus(playbackStatus)
-            //Update to Current Track
             prevPlayingIndex = currentlyPlayingIndex
-            playableTrack = track
             dashboardViewModel.setCurrentlyPlayingTrackId(convertMediaIdToTrackId(id!!))
-            if (!dashboardBinding.nowPlayingCard.isVisible) {
-                dashboardViewModel.checkLastPlayedTrackId()//TODO Refactor for readability
-            }
             mediaTranspotControls?.playFromMediaId(id, null)
         }
         dashboardBinding.tracksRecyclerView.adapter = tracksAdapter
@@ -224,6 +201,7 @@ internal class DashboardActivity : BaseActivity(),
         dashboardBinding.trackTitleTextView.text = metadata.title
         dashboardBinding.trackArtistTextView.text = metadata.artist
         dashboardBinding.albumArtImageView.load(metadata.albumArtUri)
+        dashboardBinding.nowPlayingCard.show()
     }
 
     private fun handlePlaybackState(state: Int) {
@@ -241,7 +219,7 @@ internal class DashboardActivity : BaseActivity(),
                 tracksAdapter.updateIsPlaying(prevPlayingIndex, false)
             }
             PlaybackStateCompat.STATE_ERROR -> {
-                Timber.d("State error")
+                //TODO
             }
         }
     }
@@ -271,26 +249,6 @@ internal class DashboardActivity : BaseActivity(),
         })
     }
 
-    private fun observeLastPlayedTrack() {
-        dashboardViewModel.lastPlayedTrackId.observe(this, Observer { trackId ->
-            if (trackId != -1L) {
-                dashboardBinding.nowPlayingCard.show()
-                initLastPlayedTrack(trackId)
-            } else dashboardBinding.nowPlayingCard.hide()
-        })
-    }
-
-    private fun initLastPlayedTrack(trackId: Long) {
-        if (!::playableTrack.isInitialized) {
-            val track =
-                trackRepository.loadTrackForId(trackId.toString()) ?: return
-            playableTrack = track.toPlayableTrack()
-            val state =
-                mediaControllerCompat?.playbackState?.state ?: PlaybackStateCompat.STATE_NONE
-            if (state != PlaybackStateCompat.STATE_PLAYING)
-                mediaTranspotControls?.prepareFromMediaId(playableTrack.mediaId, null)
-        }
-    }
 
     private fun checkPermissionsAndInit() {
         if (!PermissionUtils.checkAllPermissionsGranted(

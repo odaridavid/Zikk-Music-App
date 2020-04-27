@@ -81,28 +81,11 @@ internal class PlaybackNotificationBuilder @Inject constructor(
                         )
                     )
                 )
-                addAction(
-                    NotificationCompat.Action(
-                        R.drawable.ic_skip_next_black_48dp,
-                        context.getString(R.string.playback_action_skip_to_next),
-                        MediaButtonReceiver.buildMediaButtonPendingIntent(
-                            context,
-                            ACTION_SKIP_TO_NEXT
-                        )
-                    )
-                )
 
                 setStyle(
                     androidx.media.app.NotificationCompat.MediaStyle()
-                        .setCancelButtonIntent(
-                            MediaButtonReceiver.buildMediaButtonPendingIntent(
-                                context,
-                                ACTION_STOP
-                            )
-                        )
                         .setMediaSession(mediaSessionCompat.sessionToken)
-                        .setShowActionsInCompactView(0, 1)
-                        .setShowCancelButton(true)
+                        .setShowActionsInCompactView(0)
                 )
             }
         val notification = notificationBuilder.build()

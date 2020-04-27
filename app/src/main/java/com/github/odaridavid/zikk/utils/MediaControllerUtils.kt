@@ -1,7 +1,7 @@
 package com.github.odaridavid.zikk.utils
 
-import android.app.Activity
 import android.support.v4.media.session.MediaControllerCompat
+import com.github.odaridavid.zikk.ui.DashboardActivity
 
 /**
  *
@@ -16,6 +16,9 @@ import android.support.v4.media.session.MediaControllerCompat
  * the License.
  *
  **/
-val Activity.mediaTranspotControls: MediaControllerCompat.TransportControls?
+internal val DashboardActivity.mediaTranspotControls: MediaControllerCompat.TransportControls?
     get() = MediaControllerCompat.getMediaController(this).transportControls
+
+internal val DashboardActivity.mediaControllerCompat: MediaControllerCompat?
+    get() = MediaControllerCompat.getMediaController(this)
 
