@@ -171,7 +171,7 @@ internal class ZikkMediaService : MediaBrowserServiceCompat(),
     private fun createPlaybackState(): PlaybackStateCompat {
         return playbackStateCompatBuilder
             .setActions(
-                ACTION_PLAY or ACTION_PLAY_PAUSE or ACTION_PAUSE or ACTION_STOP or ACTION_SKIP_TO_NEXT
+                ACTION_PLAY or ACTION_PLAY_PAUSE or ACTION_PAUSE or ACTION_STOP
             )
             .build()
 
