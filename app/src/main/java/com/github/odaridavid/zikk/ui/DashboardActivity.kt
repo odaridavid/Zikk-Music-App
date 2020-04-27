@@ -143,7 +143,7 @@ internal class DashboardActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         if (mediaBrowser?.isConnected == true)
-            mediaControllerCompat.playbackState?.let { state ->
+            mediaControllerCompat?.playbackState?.let { state ->
                 handlePlaybackState(state.state)
             }
         volumeControlStream = AudioManager.STREAM_MUSIC
@@ -166,7 +166,7 @@ internal class DashboardActivity : BaseActivity() {
     override fun onStop() {
         super.onStop()
         mediaBrowser?.disconnect()
-        mediaControllerCompat.unregisterCallback(mediaControllerCompatCallback)
+        mediaControllerCompat?.unregisterCallback(mediaControllerCompatCallback)
     }
 
     override fun onRequestPermissionsResult(

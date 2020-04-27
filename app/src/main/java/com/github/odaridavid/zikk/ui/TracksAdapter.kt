@@ -13,7 +13,10 @@ package com.github.odaridavid.zikk.ui;
  * the License.
  *
  **/
+import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +28,7 @@ import com.github.odaridavid.zikk.R
 import com.github.odaridavid.zikk.models.PlayableTrack
 import com.github.odaridavid.zikk.utils.invisible
 import com.github.odaridavid.zikk.utils.show
+import com.github.odaridavid.zikk.utils.versionFrom
 
 internal class TracksAdapter(val onClick: (String?, Int) -> Unit) :
     RecyclerView.Adapter<TracksAdapter.TrackViewHolder>() {
@@ -80,15 +84,15 @@ internal class TracksAdapter(val onClick: (String?, Int) -> Unit) :
 
                 nowPlayingImageView.apply {
                     setBackgroundResource(R.drawable.now_playing_anim)
-//                    animatedNowPlayingDrawable = background as AnimatedVectorDrawable
-//                    if (versionFrom(Build.VERSION_CODES.M))
-//                        animatedNowPlayingDrawable.registerAnimationCallback(object :
-//                            Animatable2.AnimationCallback() {
-//                            override fun onAnimationEnd(drawable: Drawable?) {
-//                                super.onAnimationEnd(drawable)
-//                                animatedNowPlayingDrawable.start()
-//                            }
-//                        })
+                    animatedNowPlayingDrawable = background as AnimatedVectorDrawable
+                    if (versionFrom(Build.VERSION_CODES.M))
+                        animatedNowPlayingDrawable.registerAnimationCallback(object :
+                            Animatable2.AnimationCallback() {
+                            override fun onAnimationEnd(drawable: Drawable?) {
+                                super.onAnimationEnd(drawable)
+                                animatedNowPlayingDrawable.start()
+                            }
+                        })
                 }
 
                 setNowPlayingViewVisibility(mediaItem.isPlaying, nowPlayingImageView)
@@ -106,10 +110,10 @@ internal class TracksAdapter(val onClick: (String?, Int) -> Unit) :
         private fun setNowPlayingViewVisibility(isPlaying: Boolean, showPlaying: ImageView) {
             if (isPlaying) {
                 showPlaying.show()
-//                animatedNowPlayingDrawable.start()
+                animatedNowPlayingDrawable.start()
             } else {
                 showPlaying.invisible()
-//                animatedNowPlayingDrawable.stop()
+                animatedNowPlayingDrawable.stop()
             }
         }
     }

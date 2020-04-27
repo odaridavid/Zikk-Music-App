@@ -19,6 +19,6 @@ import com.github.odaridavid.zikk.ui.DashboardActivity
 internal val DashboardActivity.mediaTranspotControls: MediaControllerCompat.TransportControls?
     get() = MediaControllerCompat.getMediaController(this).transportControls
 
-internal val DashboardActivity.mediaControllerCompat: MediaControllerCompat
+internal val DashboardActivity.mediaControllerCompat: MediaControllerCompat?
     get() = MediaControllerCompat.getMediaController(this)
 
