@@ -31,14 +31,6 @@ internal class DashboardViewModel(private val lastPlayedTrackPreference: LastPla
     val playbackStatus: LiveData<PlaybackStatus>
         get() = _playbackStatus
 
-    private val _lastPlayedTrackId = MutableLiveData<Long>()
-    val lastPlayedTrackId: LiveData<Long>
-        get() = _lastPlayedTrackId
-
-    init {
-        _lastPlayedTrackId.value = lastPlayedTrackPreference.getLastPlayedTrackId()
-    }
-
     fun setIsConnected(value: Boolean) {
         _isMediaBrowserConnected.value = value
     }
@@ -48,11 +40,7 @@ internal class DashboardViewModel(private val lastPlayedTrackPreference: LastPla
     }
 
     fun setCurrentlyPlayingTrackId(trackId: Long) {
-        lastPlayedTrackPreference.setLastPlayedTrackId(trackId)
-    }
-
-    fun checkLastPlayedTrackId() {
-        _lastPlayedTrackId.value = lastPlayedTrackPreference.getLastPlayedTrackId()
+        lastPlayedTrackPreference.lastPlayedTrackId = trackId
     }
 
     class Factory(

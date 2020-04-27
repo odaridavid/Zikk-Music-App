@@ -21,15 +21,15 @@ import javax.inject.Inject
  */
 internal class LastPlayedTrackPreference @Inject constructor(private val sharedPreferences: SharedPreferences) {
 
-    fun setLastPlayedTrackId(trackId: Long) {
-        val editor = sharedPreferences.edit()
-        editor.putLong(KEY_LAST_PLAYED_TRACK_ID, trackId)
-        editor.apply()
-    }
-
-    fun getLastPlayedTrackId(): Long {
-        return sharedPreferences.getLong(KEY_LAST_PLAYED_TRACK_ID, DEFAULT_VALUE)
-    }
+    var lastPlayedTrackId: Long
+        set(value) {
+            val editor = sharedPreferences.edit()
+            editor.putLong(KEY_LAST_PLAYED_TRACK_ID, value)
+            editor.apply()
+        }
+        get() {
+            return sharedPreferences.getLong(KEY_LAST_PLAYED_TRACK_ID, DEFAULT_VALUE)
+        }
 
     companion object {
         private const val KEY_LAST_PLAYED_TRACK_ID = "last_played_id"

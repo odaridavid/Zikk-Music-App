@@ -14,12 +14,8 @@ package com.github.odaridavid.zikk.di
  *
  **/
 import android.content.Context
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat.*
-import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
 import com.github.odaridavid.zikk.playback.session.MediaLoader
-import com.github.odaridavid.zikk.playback.session.TrackPlayer
+import com.github.odaridavid.zikk.playback.player.TrackPlayer
 import com.github.odaridavid.zikk.repositories.*
 import dagger.Module
 import dagger.Provides
@@ -48,7 +44,10 @@ internal class PlaybackModule {
 
     @Provides
     fun providesTrackPlayer(context: Context, trackRepository: TrackRepository): TrackPlayer {
-        return TrackPlayer(context, trackRepository)
+        return TrackPlayer(
+            context,
+            trackRepository
+        )
     }
 
 }

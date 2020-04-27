@@ -19,18 +19,20 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
+import com.github.odaridavid.zikk.data.LastPlayedTrackPreference
 import com.github.odaridavid.zikk.models.MediaId
 import com.github.odaridavid.zikk.notification.PlaybackNotificationBuilder
 import com.github.odaridavid.zikk.playback.BecomingNoisyReceiver
+import com.github.odaridavid.zikk.playback.player.TrackPlayer
 import com.github.odaridavid.zikk.utils.injector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,10 +44,11 @@ import javax.inject.Inject
  */
 internal class ZikkMediaService : MediaBrowserServiceCompat(),
     CoroutineScope by CoroutineScope(Dispatchers.IO) {
-
+    //TODO Fix on swipe notification and resume activity media not playing
     private lateinit var mediaSessionCompat: MediaSessionCompat
     private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
     private val playbackStateCompatBuilder = PlaybackStateCompat.Builder()
+    private var metadataCompatBuilder = MediaMetadataCompat.Builder()
 
     @Inject
     lateinit var mediaLoader: MediaLoader
@@ -58,6 +61,9 @@ internal class ZikkMediaService : MediaBrowserServiceCompat(),
 
     @Inject
     lateinit var trackPlayer: TrackPlayer
+
+    @Inject
+    lateinit var lastPlayedTrackPreference: LastPlayedTrackPreference
 
     override fun onCreate() {
         injector.inject(this)
@@ -89,7 +95,9 @@ internal class ZikkMediaService : MediaBrowserServiceCompat(),
                 audioManager,
                 becomingNoisyReceiver,
                 playbackStateCompatBuilder,
-                trackPlayer
+                metadataCompatBuilder,
+                trackPlayer,
+                lastPlayedTrackPreference
             )
         )
     }
@@ -146,7 +154,6 @@ internal class ZikkMediaService : MediaBrowserServiceCompat(),
 
     override fun onDestroy() {
         super.onDestroy()
-        this.cancel()
         mediaSessionCompat.isActive = false
         trackPlayer.release()
         mediaSessionCompat.release()
