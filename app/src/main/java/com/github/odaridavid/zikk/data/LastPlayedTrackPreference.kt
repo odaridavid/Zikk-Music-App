@@ -17,7 +17,7 @@ import android.content.SharedPreferences
 import javax.inject.Inject
 
 /**
- * Used to show or hide the player if no track has ever been played since install
+ * Used to show or hide the player
  */
 internal class LastPlayedTrackPreference @Inject constructor(private val sharedPreferences: SharedPreferences) {
 
