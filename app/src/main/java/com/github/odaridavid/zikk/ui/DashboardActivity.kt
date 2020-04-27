@@ -50,7 +50,6 @@ internal class DashboardActivity : BaseActivity() {
     lateinit var lastPlayedTrackPreference: LastPlayedTrackPreference
 
     private var mediaBrowser: MediaBrowserCompat? = null
-    private lateinit var playableTrack: PlayableTrack
     private lateinit var playbackList: MutableList<PlayableTrack>
     lateinit var dashboardBinding: ActivityDashboardBinding
     private lateinit var tracksAdapter: TracksAdapter
@@ -187,12 +186,10 @@ internal class DashboardActivity : BaseActivity() {
     }
 
     private fun initAdapter() {
-        tracksAdapter = TracksAdapter { id, currentlyPlayingIndex, track ->
+        tracksAdapter = TracksAdapter { id, currentlyPlayingIndex ->
             val playbackStatus = PlaybackStatus(prevPlayingIndex, currentlyPlayingIndex)
             dashboardViewModel.setNowPlayingStatus(playbackStatus)
-            //Update to Current Track
             prevPlayingIndex = currentlyPlayingIndex
-            playableTrack = track
             dashboardViewModel.setCurrentlyPlayingTrackId(convertMediaIdToTrackId(id!!))
             mediaTranspotControls?.playFromMediaId(id, null)
         }
@@ -222,7 +219,7 @@ internal class DashboardActivity : BaseActivity() {
                 tracksAdapter.updateIsPlaying(prevPlayingIndex, false)
             }
             PlaybackStateCompat.STATE_ERROR -> {
-                Timber.d("State error")
+                //TODO
             }
         }
     }

@@ -44,7 +44,6 @@ import javax.inject.Inject
  */
 internal class ZikkMediaService : MediaBrowserServiceCompat(),
     CoroutineScope by CoroutineScope(Dispatchers.IO) {
-    //TODO Fix on swipe notification and resume activity media not playing
     private lateinit var mediaSessionCompat: MediaSessionCompat
     private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
     private val playbackStateCompatBuilder = PlaybackStateCompat.Builder()

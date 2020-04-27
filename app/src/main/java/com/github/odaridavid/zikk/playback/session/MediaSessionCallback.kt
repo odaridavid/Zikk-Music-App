@@ -80,7 +80,7 @@ internal class MediaSessionCallback(
         val request = initAudioFocus()
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Timber.d("Playing from media id $mediaId")
-            startSession(mediaId)
+            startPlayback(mediaId)
         }
     }
 
@@ -88,7 +88,7 @@ internal class MediaSessionCallback(
         super.onPlay()
         val request = initAudioFocus()
         if (request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            resumeSession()
+            resumePlayback()
         }
     }
 
@@ -157,7 +157,8 @@ internal class MediaSessionCallback(
         }
     }
 
-    private fun startSession(mediaId: String) {
+    private fun startPlayback(mediaId: String) {
+        Timber.i("Starting playback")
         with(serviceContext) {
             startService(Intent(this, ZikkMediaService::class.java))
             with(trackPlayer) {
@@ -179,7 +180,8 @@ internal class MediaSessionCallback(
         }
     }
 
-    private fun resumeSession() {
+    private fun resumePlayback() {
+        Timber.i("Resuming playback")
         with(serviceContext) {
             startService(Intent(this, ZikkMediaService::class.java))
             trackPlayer.start()
